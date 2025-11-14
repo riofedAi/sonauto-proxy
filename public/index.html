@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sonauto Proxy — Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <div class="max-w-5xl mx-auto p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Sonauto Proxy — Dashboard</h1>
+      <div id="statusBadge" class="text-sm px-3 py-1 rounded bg-green-200 text-green-800">Ready</div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-semibold mb-2">Générer une piste</h2>
+        <label class="block text-sm">Mode</label>
+        <select id="mode" class="w-full p-2 border rounded mb-3">
+          <option value="custom">Paroles (custom)</option>
+          <option value="prompt">Prompt</option>
+          <option value="instrumental">Instrumental</option>
+        </select>
+
+        <div id="fieldLyrics" class="mb-3">
+          <label class="block text-sm">Paroles</label>
+          <textarea id="lyrics" rows="4" class="w-full p-2 border rounded">Jésus tu es mon tout, ma lumière, ma foi, mon roi, mon secours chaque jour.</textarea>
+        </div>
+
+        <div id="fieldPrompt" class="hidden mb-3">
+          <label class="block text-sm">Prompt</label>
+          <input id="prompt" class="w-full p-2 border rounded" value="A calm pop ballad with warm piano and emotional vocals about love and hope."/>
+        </div>
+
+        <label class="block text-sm">Tags (comma separated)</label>
+        <input id="tags" class="w-full p-2 border rounded mb-3" value="pop,worship,emotional,modern" />
+
+        <button id="btnGenerate" class="w-full bg-indigo-600 text-white p-3 rounded font-semibold">🎵 Générer 2 pistes</button>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-semibold mb-2">Suivi & Résultats</h2>
+        <div class="mb-3">
+          <label class="block text-sm">Task ID (pour vérification)</label>
+          <input id="taskId" class="w-full p-2 border rounded" placeholder="Task ID..." />
+          <div class="flex gap-2 mt-2">
+            <button id="btnCheck" class="px-3 py-2 bg-yellow-500 rounded text-white">🔎 Vérifier</button>
+            <button id="btnClear" class="px-3 py-2 bg-gray-300 rounded">Effacer</button>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-medium mb-2">Logs</h3>
+          <pre id="log" class="h-48 overflow-auto p-3 bg-black text-green-200 rounded text-sm"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 bg-white p-4 rounded shadow">
+      <h2 class="font-semibold mb-2">Pistes Générées</h2>
+      <ul id="tracks" class="space-y-2"></ul>
+    </div>
+
+    <footer class="mt-6 text-sm text-gray-600">
+      <p>Déployer sur Render avec <code>render.yaml</code>. Garder <b>AUTO_DOWNLOAD=false</b> en production.</p>
+    </footer>
+  </div>
+
+<script>
+const apiBase = "";
+
+function log(msg){
+  const el = document.getElementById('log');
+  el.textContent = msg + "\n" + el.textContent;
+}
+
+function setStatus(text, green=true){
+  const b = document.getElementById('statusBadge');
+  b.textContent = text;
+  b.className = 'text-sm px-3 py-1 rounded ' + (green ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800');
+}
+
+document.getElementById('mode').addEventListener('change', (e)=>{
+  const m = e.target.value;
+  document.getElementById('fieldLyrics').style.display = m === 'custom' ? 'block' : 'none';
+  document.getElementById('fieldPrompt').style.display = m === 'prompt' ? 'block' : 'none';
+});
+
+document.getElementById('btnGenerate').addEventListener('click', async ()=>{
+  setStatus('Submitting...');
+  const mode = document.getElementById('mode').value;
+  const payload = { mode };
+
+  if(mode === 'custom') payload.lyrics = document.getElementById('lyrics').value;
+  if(mode === 'prompt') payload.prompt = document.getElementById('prompt').value;
+  payload.tags = document.getElementById('tags').value.split(',').map(s=>s.trim());
+
+  try{
+    const r = await fetch('/generate', {
+      method:'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if(data.status === 'SUBMITTED'){
+      log('Submitted: ' + data.taskId);
+      document.getElementById('taskId').value = data.taskId;
+      setStatus('Submitted');
+      pollStatusAndShow(data.taskId);
+    } else {
+      log('Error: ' + JSON.stringify(data));
+      setStatus('Error', false);
+    }
+  } catch(err){
+    log('Request failed: ' + err.message);
+    setStatus('Error', false);
+  }
+});
+
+document.getElementById('btnCheck').addEventListener('click', async ()=>{
+  const taskId = document.getElementById('taskId').value.trim();
+  if(!taskId){ alert('Renseigne un task ID'); return; }
+  pollStatusAndShow(taskId);
+});
+
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  document.getElementById('log').textContent = '';
+  document.getElementById('tracks').innerHTML = '';
+});
+
+async function pollStatusAndShow(taskId){
+  setStatus('Polling...');
+  for(let i=0;i<30;i++){
+    try{
+      const r = await fetch('/status/' + encodeURIComponent(taskId));
+      const d = await r.json();
+      log('Status: ' + d.status);
+      if(d.status === 'SUCCESS'){
+        setStatus('Success');
+        showTracks(d.song_paths || []);
+        return;
+      }
+      if(d.status === 'FAILURE'){
+        setStatus('Failure', false);
+        log('Failure: ' + (d.error_message||'unknown'));
+        return;
+      }
+    }catch(err){
+      log('Poll error: ' + err.message);
+      setStatus('Error', false);
+      return;
+    }
+    await new Promise(r=>setTimeout(r,4000));
+  }
+  setStatus('Timeout', false);
+  log('Polling timeout');
+}
+
+function showTracks(urls){
+  const ul = document.getElementById('tracks');
+  ul.innerHTML = '';
+  urls.forEach((u,i)=>{
+    const li = document.createElement('li');
+    li.className = 'flex items-center justify-between p-3 border rounded';
+    const name = document.createElement('div');
+    name.innerHTML = '<strong>Track ' + (i+1) + '</strong><div class="text-xs text-gray-500">' + u + '</div>';
+    const actions = document.createElement('div');
+    actions.className = 'flex gap-2';
+    const open = document.createElement('a');
+    open.href = u;
+    open.target = '_blank';
+    open.className = 'px-3 py-1 bg-indigo-600 text-white rounded';
+    open.textContent = 'Open';
+    const proxy = document.createElement('a');
+    proxy.href = '/download?url=' + encodeURIComponent(u);
+    proxy.className = 'px-3 py-1 bg-green-600 text-white rounded';
+    proxy.textContent = 'Download (proxy)';
+    actions.appendChild(open);
+    actions.appendChild(proxy);
+    li.appendChild(name);
+    li.appendChild(actions);
+    ul.appendChild(li);
+  });
+  log('Tracks shown: ' + urls.length);
+}
+</script>
+</body>
+</html>

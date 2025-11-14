@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: sonauto-proxy
+    env: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
+    healthCheckPath: "/"
+    envVars:
+      - key: EXPO_PUBLIC_SONAUTO_API_KEY
+        value: "<SET_YOUR_SONAUTO_API_KEY_IN_RENDER_DASHBOARD>"
+      - key: AUTO_DOWNLOAD
+        value: "false"
+    disk: 1024

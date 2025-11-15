@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sonauto-proxy
+    name: sonauto-proxy-pro
     env: node
     plan: free
     branch: main
@@ -13,4 +13,10 @@ services:
         value: "<SET_YOUR_SONAUTO_API_KEY_IN_RENDER_DASHBOARD>"
       - key: AUTO_DOWNLOAD
         value: "false"
+      - key: ENABLE_KEEP_ALIVE
+        value: "true"
+      - key: KEEP_ALIVE_URL
+        value: "<SET_YOUR_RENDER_SERVICE_URL_HERE>"
+      - key: CLIENT_API_KEY
+        value: ""
     disk: 1024

@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Sonauto Proxy — Dashboard</title>
+  <title>Sonauto Proxy — PRO Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 text-gray-900">
-  <div class="max-w-5xl mx-auto p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Sonauto Proxy — Dashboard</h1>
-      <div id="statusBadge" class="text-sm px-3 py-1 rounded bg-green-200 text-green-800">Ready</div>
-    </div>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-bold">Sonauto Proxy — PRO</h1>
+      <div class="text-sm text-gray-600">Status: <span id="statusBadge" class="font-medium text-green-600">Ready</span></div>
+    </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-semibold mb-2">Générer une piste</h2>
-        <label class="block text-sm">Mode</label>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <section class="lg:col-span-1 bg-white p-4 rounded shadow">
+        <h2 class="font-semibold mb-2">Generate</h2>
+        <label class="block text-sm mb-1">Mode</label>
         <select id="mode" class="w-full p-2 border rounded mb-3">
           <option value="custom">Paroles (custom)</option>
           <option value="prompt">Prompt</option>
@@ -33,53 +33,56 @@
           <input id="prompt" class="w-full p-2 border rounded" value="A calm pop ballad with warm piano and emotional vocals about love and hope."/>
         </div>
 
-        <label class="block text-sm">Tags (comma separated)</label>
-        <input id="tags" class="w-full p-2 border rounded mb-3" value="pop,worship,emotional,modern" />
+        <label class="block text-sm mb-1">Tags (comma separated)</label>
+        <input id="tags" class="w-full p-2 border rounded mb-3" value="ballad,worship,emotional,modern" />
+
+        <label class="block text-sm mb-1">Client key (optional)</label>
+        <input id="clientKey" class="w-full p-2 border rounded mb-3" placeholder="X-CLIENT-KEY header if used on server"/>
 
         <button id="btnGenerate" class="w-full bg-indigo-600 text-white p-3 rounded font-semibold">🎵 Générer 2 pistes</button>
-      </div>
+      </section>
 
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-semibold mb-2">Suivi & Résultats</h2>
-        <div class="mb-3">
-          <label class="block text-sm">Task ID (pour vérification)</label>
-          <input id="taskId" class="w-full p-2 border rounded" placeholder="Task ID..." />
-          <div class="flex gap-2 mt-2">
-            <button id="btnCheck" class="px-3 py-2 bg-yellow-500 rounded text-white">🔎 Vérifier</button>
-            <button id="btnClear" class="px-3 py-2 bg-gray-300 rounded">Effacer</button>
+      <section class="lg:col-span-2 bg-white p-4 rounded shadow">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold">Tasks & Logs</h2>
+          <div class="flex gap-2">
+            <button id="btnClear" class="px-3 py-1 bg-gray-200 rounded">Clear</button>
           </div>
         </div>
 
-        <div>
-          <h3 class="font-medium mb-2">Logs</h3>
-          <pre id="log" class="h-48 overflow-auto p-3 bg-black text-green-200 rounded text-sm"></pre>
-        </div>
-      </div>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm">Task ID</label>
+            <input id="taskId" class="w-full p-2 border rounded mb-2" placeholder="task-id..."/>
+            <div class="flex gap-2">
+              <button id="btnCheck" class="px-3 py-2 bg-yellow-500 rounded text-white">🔎 Vérifier</button>
+            </div>
+            <div class="mt-4">
+              <h3 class="font-medium mb-2">Tracks</h3>
+              <ul id="tracks" class="space-y-2"></ul>
+            </div>
+          </div>
 
-    <div class="mt-6 bg-white p-4 rounded shadow">
-      <h2 class="font-semibold mb-2">Pistes Générées</h2>
-      <ul id="tracks" class="space-y-2"></ul>
+          <div>
+            <h3 class="font-medium mb-2">Logs</h3>
+            <pre id="log" class="h-72 overflow-auto p-3 bg-black text-green-200 rounded text-sm"></pre>
+          </div>
+        </div>
+      </section>
     </div>
 
     <footer class="mt-6 text-sm text-gray-600">
-      <p>Déployer sur Render avec <code>render.yaml</code>. Garder <b>AUTO_DOWNLOAD=false</b> en production.</p>
+      <p>Keep AUTO_DOWNLOAD=false on Render. To persist tracks, configure S3 and set AWS env vars.</p>
     </footer>
   </div>
 
 <script>
-const apiBase = "";
-
+const apiBase = '';
 function log(msg){
   const el = document.getElementById('log');
-  el.textContent = msg + "\n" + el.textContent;
+  el.textContent = new Date().toISOString() + ' | ' + msg + "\n" + el.textContent;
 }
-
-function setStatus(text, green=true){
-  const b = document.getElementById('statusBadge');
-  b.textContent = text;
-  b.className = 'text-sm px-3 py-1 rounded ' + (green ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800');
-}
+function setStatusText(t){ document.getElementById('statusBadge').textContent = t; }
 
 document.getElementById('mode').addEventListener('change', (e)=>{
   const m = e.target.value;
@@ -88,33 +91,33 @@ document.getElementById('mode').addEventListener('change', (e)=>{
 });
 
 document.getElementById('btnGenerate').addEventListener('click', async ()=>{
-  setStatus('Submitting...');
+  setStatusText('Submitting...');
   const mode = document.getElementById('mode').value;
   const payload = { mode };
-
   if(mode === 'custom') payload.lyrics = document.getElementById('lyrics').value;
   if(mode === 'prompt') payload.prompt = document.getElementById('prompt').value;
   payload.tags = document.getElementById('tags').value.split(',').map(s=>s.trim());
+  const clientKey = document.getElementById('clientKey').value.trim();
 
   try{
     const r = await fetch('/generate', {
       method:'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', ...(clientKey ? {'X-CLIENT-KEY': clientKey} : {})},
       body: JSON.stringify(payload)
     });
     const data = await r.json();
     if(data.status === 'SUBMITTED'){
       log('Submitted: ' + data.taskId);
       document.getElementById('taskId').value = data.taskId;
-      setStatus('Submitted');
+      setStatusText('Submitted');
       pollStatusAndShow(data.taskId);
     } else {
       log('Error: ' + JSON.stringify(data));
-      setStatus('Error', false);
+      setStatusText('Error');
     }
   } catch(err){
     log('Request failed: ' + err.message);
-    setStatus('Error', false);
+    setStatusText('Error');
   }
 });
 
@@ -127,33 +130,34 @@ document.getElementById('btnCheck').addEventListener('click', async ()=>{
 document.getElementById('btnClear').addEventListener('click', ()=>{
   document.getElementById('log').textContent = '';
   document.getElementById('tracks').innerHTML = '';
+  setStatusText('Ready');
 });
 
 async function pollStatusAndShow(taskId){
-  setStatus('Polling...');
-  for(let i=0;i<30;i++){
+  setStatusText('Polling...');
+  for(let i=0;i<60;i++){
     try{
       const r = await fetch('/status/' + encodeURIComponent(taskId));
       const d = await r.json();
       log('Status: ' + d.status);
       if(d.status === 'SUCCESS'){
-        setStatus('Success');
+        setStatusText('Success');
         showTracks(d.song_paths || []);
         return;
       }
       if(d.status === 'FAILURE'){
-        setStatus('Failure', false);
+        setStatusText('Failure');
         log('Failure: ' + (d.error_message||'unknown'));
         return;
       }
     }catch(err){
       log('Poll error: ' + err.message);
-      setStatus('Error', false);
+      setStatusText('Error');
       return;
     }
     await new Promise(r=>setTimeout(r,4000));
   }
-  setStatus('Timeout', false);
+  setStatusText('Timeout');
   log('Polling timeout');
 }
 

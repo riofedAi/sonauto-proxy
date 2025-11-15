@@ -1,67 +1,52 @@
-# Sonauto Proxy (Render-ready) — Dashboard (Option B)
+# Sonauto Proxy — PRO (Option B)
 
-This repository contains a Node.js HTTP proxy to interact with the Sonauto API and a small dashboard UI.
+Files included:
+- server.js — PRO proxy server with robust polling, keep-alive, optional S3 upload and simple client auth.
+- public/index.html — PRO Dashboard UI (tailwind CDN).
+- package.json — deps: dotenv, aws-sdk (optional).
+- render.yaml — Render service config (free plan).
+- .env.example — example env for local testing.
+- downloads/ — directory for saved mp3 if AUTO_DOWNLOAD=true.
 
-## Files
-- `server.js` — main HTTP server and proxy (long-polling, streaming, download proxy, background polling).
-- `public/index.html` — Dashboard UI (Option B: dashboard with logs, task status, tracks list).
-- `package.json` — minimal Node configuration.
-- `render.yaml` — Render service configuration (free plan).
-- `.env.example` — example environment variables.
+## Deploy (recommended)
+1. Push this repo to GitHub.
+2. Create new Web Service on Render and connect repo (branch main).
+3. Render detects `render.yaml` and deploys automatically.
 
-## Deploy to Render (recommended)
-1. Push this repo to GitHub (or GitLab).  
-2. In Render dashboard click **New → Web Service**.  
-3. Connect your repo and select branch `main`. Render will detect `render.yaml` and create the service.
-4. In Render service settings > Environment set:
-   - `EXPO_PUBLIC_SONAUTO_API_KEY` = (your Sonauto API key) — secret
-   - `AUTO_DOWNLOAD` = false
-5. Deploy. Render runs `npm install` and `node server.js`.
+## Environment (Render UI > Environment)
+Set these:
+- EXPO_PUBLIC_SONAUTO_API_KEY = your Sonauto key (secret)
+- AUTO_DOWNLOAD = false
+- ENABLE_KEEP_ALIVE = true
+- KEEP_ALIVE_URL = https://<your-render-service>.onrender.com/
+- CLIENT_API_KEY = (optional) a secret to protect /generate
+Optional S3:
+- AWS_S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 
 ## Local testing
-1. Copy `.env.example` to `.env` and set your key.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run:
-   ```bash
-   node server.js
-   ```
-4. Open `http://localhost:3000`
+1. Copy .env.example to .env and fill keys.
+2. npm install
+3. node server.js
+4. Open http://localhost:3000
 
-## Usage (API)
-- `POST /generate` body JSON:
-  ```json
-  { "mode": "custom|prompt|instrumental", ... }
-  ```
-  Example:
-  ```json
-  { "mode":"custom", "lyrics":"Hello world", "tags":["pop"] }
-  ```
+## Notes
+- Keep AUTO_DOWNLOAD=false on Render; use S3 for persistence.
+- If using CLIENT_API_KEY, add header X-CLIENT-KEY with that value from your React app.
+- KEEP_ALIVE_URL should be set to your deployed site URL so the internal pinger keeps the instance warm.
 
-- `GET /status/<taskId>` — returns Sonauto task status response  
-- `GET /download?url=<song_url>` — proxies download (no saving required)
+## React Native Example
+POST /generate:
+{
+  "mode":"custom",
+  "lyrics":"Jésus tu es mon tout...",
+  "tags":["ballad","worship"]
+}
+Headers: Content-Type: application/json
+Optional header: X-CLIENT-KEY: <client key>
 
-## React Native integration
-Set your API base to `https://<your-service>.onrender.com` and call `/generate` and `/status/<id>`.
+Check status:
+GET /status/<taskId>
 
-## Notes & recommendations
-- Keep `AUTO_DOWNLOAD=false` on Render because filesystem is ephemeral.
-- For persistent storage use S3/DigitalOcean Spaces and upload tracks in `handlePolling`.
-- Add auth and rate limiting in production.
-- If you want, I can add S3 upload example, or a worker service for polling.
+Download via proxy:
+GET /download?url=<encodeURIComponent(song_url)>
 
-## Git + Render quick commands
-```bash
-# initialize and push to GitHub
-git init
-git add .
-git commit -m "Initial Sonauto proxy"
-# create remote repo on GitHub and push (replace URL)
-git remote add origin git@github.com:YOURUSER/YOURREPO.git
-git branch -M main
-git push -u origin main
-```
-
-Then connect the repo to Render and follow the Render UI steps above.

@@ -35,7 +35,11 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.EXPO_PUBLIC_SONAUTO_API_KEY;
 const AUTO_DOWNLOAD = process.env.AUTO_DOWNLOAD === 'true';
 const BASE_URL = 'https://api.sonauto.ai/v1';
-const OUTPUT_DIR = path.join(process.cwd(), 'downloads');
+const OUTPUT_DIR = path.join(process.cwd(), 'songs');
+
+// ACE-Step configuration
+const ACESTEP_API_KEY = process.env.ACESTEP_API_KEY || ''; // fallback if needed
+const ACESTEP_BASE_URL = process.env.ACESTEP_BASE_URL || 'https://api.acemusic.ai';
 
 // Optional client-side API key (simple protection)
 const CLIENT_API_KEY = process.env.CLIENT_API_KEY || null;
@@ -172,9 +176,15 @@ const server = http.createServer(async (req, res) => {
     req.on('data', (chunk) => (body += chunk.toString()));
     req.on('end', async () => {
       try {
+        const payload = JSON.parse(body || '{}');
+        const engine = payload.engine || 'sonauto'; // default to sonauto if not specified
+
+        if (engine === 'acestep') {
+          return handleAcestepGeneration(req, res, payload);
+        }
+
         if (!API_KEY) throw new Error('Server missing Sonauto API key (EXPO_PUBLIC_SONAUTO_API_KEY)');
 
-        const payload = JSON.parse(body || '{}');
         if (!payload.mode) throw new Error('Mode missing (custom/prompt/instrumental)');
 
         // prepare sonauto payload
@@ -218,10 +228,10 @@ const server = http.createServer(async (req, res) => {
         const genRes = await apiCall('/generations', 'POST', sonautoPayload);
         const taskId = genRes && genRes.task_id ? genRes.task_id : (genRes && genRes.id) ? genRes.id : null;
         if (!taskId) {
-            log('Unexpected generation response', genRes);
-            res.writeHead(502, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ status: 'ERROR', message: 'Invalid generation response', detail: genRes }));
-            return;
+          log('Unexpected generation response', genRes);
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'ERROR', message: 'Invalid generation response', detail: genRes }));
+          return;
         }
 
         log('Task submitted', taskId);
@@ -239,55 +249,102 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-// GET /status/:taskId
-if (pathname.startsWith('/status/') && req.method === 'GET') {
-  const taskId = pathname.split('/')[2];
-  try {
-    if (!API_KEY) throw new Error('Missing Sonauto API key');
-    const statusRes = await apiCall(`/generations/${taskId}`, 'GET');
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(statusRes));
-  } catch (err) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ERROR', message: err.message || 'Unknown' }));
-  }
-  return;
-}
+  // GET /status/:taskId
+  if (pathname.startsWith('/status/') && req.method === 'GET') {
+    const taskId = pathname.split('/')[2];
 
-// GET /download?url=...
-if (pathname === '/download' && req.method === 'GET') {
-  const trackUrl = parsedUrl.query && parsedUrl.query.url;
-  if (!trackUrl) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ERROR', message: 'Missing url query parameter' }));
-    return;
-  }
-  if (!isAllowedTrackHostname(trackUrl)) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ERROR', message: 'Track URL not allowed' }));
-    return;
-  }
-  try {
-    const headers = API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {};
-    const trackRes = await fetch(trackUrl, { headers });
-    if (!trackRes.ok) {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ERROR', message: `Failed to fetch track (${trackRes.status})` }));
+    if (taskId.startsWith('acestep-')) {
+      // Check if the file for this completed ACE-Step task exists
+      const expectedFilename = `${taskId}.mp3`;
+      const expectedPath = path.join(OUTPUT_DIR, expectedFilename);
+      const s3KeyCheck = `sonauto/${expectedFilename}`; // Reuse sonauto dir in s3 or separate?
+
+      if (fs.existsSync(expectedPath)) {
+        let dlUrl = `/download/${encodeURIComponent(taskId)}`;
+        // Mock Sonauto SUCCESS response
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'SUCCESS',
+          song_paths: [dlUrl]
+        }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'PROCESSING'
+        }));
+      }
       return;
     }
-    const contentType = trackRes.headers.get('content-type') || 'audio/mpeg';
-    res.writeHead(200, {
-      'Content-Type': contentType,
-      'Content-Disposition': 'attachment; filename="track.mp3"',
-    });
-    await streamPipeline(trackRes.body, res);
-  } catch (err) {
-    log('Download proxy error', err.message || err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ERROR', message: err.message || 'Unknown' }));
+
+    try {
+      if (!API_KEY) throw new Error('Missing Sonauto API key');
+      const statusRes = await apiCall(`/generations/${taskId}`, 'GET');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(statusRes));
+    } catch (err) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ERROR', message: err.message || 'Unknown' }));
+    }
+    return;
   }
-  return;
-}
+
+  // GET /download/:taskId (ChatGPT format)
+  if (pathname.startsWith('/download/') && req.method === 'GET') {
+    const taskId = pathname.split('/')[2];
+    if (taskId && taskId.startsWith('acestep-')) {
+      const filename = `${taskId}.mp3`;
+      const filePath = path.join(OUTPUT_DIR, filename);
+      if (!fs.existsSync(filePath)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ERROR', message: 'File not found' }));
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      });
+      const fileStream = fs.createReadStream(filePath);
+      return streamPipeline(fileStream, res).catch(err => {
+        log('Local download error', err.message);
+      });
+    }
+  }
+
+  // GET /download?url=...
+  if (pathname === '/download' && req.method === 'GET') {
+    const trackUrl = parsedUrl.query && parsedUrl.query.url;
+    if (!trackUrl) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ERROR', message: 'Missing url query parameter' }));
+      return;
+    }
+
+    if (!isAllowedTrackHostname(trackUrl)) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ERROR', message: 'Track URL not allowed' }));
+      return;
+    }
+    try {
+      const headers = API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {};
+      const trackRes = await fetch(trackUrl, { headers });
+      if (!trackRes.ok) {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ERROR', message: `Failed to fetch track (${trackRes.status})` }));
+        return;
+      }
+      const contentType = trackRes.headers.get('content-type') || 'audio/mpeg';
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Disposition': 'attachment; filename="track.mp3"',
+      });
+      await streamPipeline(trackRes.body, res);
+    } catch (err) {
+      log('Download proxy error', err.message || err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ERROR', message: err.message || 'Unknown' }));
+    }
+    return;
+  }
 
 
   // 404
@@ -296,6 +353,100 @@ if (pathname === '/download' && req.method === 'GET') {
 });
 
 // Robust polling with exponential backoff and optional S3 upload
+async function handleAcestepGeneration(req, res, payload) {
+  try {
+    const taskId = `acestep-${Date.now()}`;
+
+    // Respond immediately to unblock client
+    log('Task submitted (ACE-Step)', taskId);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ taskId })); // Matching chatgpt response format { taskId }
+
+    // Run ACE-Step generation in background
+    let openRouterMessages = [];
+    if (payload.mode === 'instrumental') {
+      openRouterMessages.push({
+        role: "user",
+        // Enforce prompt/lyrics tags specifically for openrouter proxy compatibility
+        content: `<prompt>${payload.prompt || 'A calm instrumental composition'}</prompt><lyrics>[inst]</lyrics>`
+      });
+    } else if (payload.mode === 'custom') {
+      openRouterMessages.push({
+        role: "user",
+        content: (payload.prompt ? `<prompt>${payload.prompt}</prompt>` : "") + `<lyrics>${payload.lyrics}</lyrics>`
+      });
+    } else {
+      // prompt mode
+      openRouterMessages.push({
+        role: "user",
+        content: payload.prompt || 'A pop song'
+      });
+    }
+
+    const openRouterPayload = {
+      model: "acemusic/acestep-v1.5-turbo",
+      messages: openRouterMessages,
+      instrumental: payload.mode === 'instrumental' || payload.instrumental,
+      duration: payload.duration || 60,
+      thinking: false, // Match chat gpt preference
+    };
+
+    log('ACE-Step calling backend...', openRouterPayload);
+    const fetchOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(openRouterPayload)
+    };
+    if (ACESTEP_API_KEY) {
+      fetchOptions.headers['Authorization'] = `Bearer ${ACESTEP_API_KEY}`;
+    }
+
+    const aceres = await fetch(`${ACESTEP_BASE_URL}/v1/chat/completions`, fetchOptions);
+    const parsed = await safeJsonResponse(aceres);
+
+    if (!aceres.ok) {
+      throw new Error(`ACE-Step API error (${aceres.status}): ${JSON.stringify(parsed)}`);
+    }
+
+    // Decode audio URL (matching chatgpt array destructuring)
+    if (parsed.choices && parsed.choices[0] && parsed.choices[0].message && parsed.choices[0].message.audio) {
+      // According to chatgpt, data.choices[0].message.audio_url.url. But OpenRouter_API.md says audio is an array!
+      // Using correct schema derived from docs earlier:
+      const audioArray = parsed.choices[0].message.audio;
+      const audioUrl = audioArray[0].audio_url.url; // data:audio/mpeg;base64,...
+      const b64Data = audioUrl.replace("data:audio/mpeg;base64,", "");
+
+      const filename = `${taskId}.mp3`;
+      const filePath = path.join(OUTPUT_DIR, filename);
+
+      // Write directly from b64 string
+      fs.writeFileSync(filePath, Buffer.from(b64Data, "base64"));
+      log('ACE-Step done', filePath);
+
+      // Optional S3 upload
+      if (USE_S3 && s3) {
+        const fileBody = fs.readFileSync(filePath);
+        const params = {
+          Bucket: process.env.AWS_S3_BUCKET,
+          Key: `sonauto/${filename}`,
+          Body: fileBody,
+          ContentType: 'audio/mpeg',
+          ACL: 'private',
+        };
+        await s3.putObject(params).promise();
+        log('ACE-Step track uploaded to S3', params.Key);
+      }
+    } else {
+      throw new Error('ACE-Step API returned no audio files in response');
+    }
+
+  } catch (err) {
+    log('ACE-Step error:', err.message || err);
+  }
+}
+
 async function handlePolling(taskId, mode, originalPayload = {}) {
   const maxAttempts = Number(process.env.MAX_POLL_ATTEMPTS) || 60;
   const baseDelay = Number(process.env.POLL_BASE_DELAY_MS) || 4000;

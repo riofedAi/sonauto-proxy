@@ -6,8 +6,9 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "aws-sdk": "^2.1410.0",
     "dotenv": "^16.0.0",
-    "aws-sdk": "^2.1410.0"
+    "uid": "^2.0.2"
   },
   "engines": {
     "node": ">=18"

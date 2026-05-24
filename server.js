@@ -431,7 +431,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(200); res.end(); return; }
 
   // Health check
-  if ((pathname === "/" || pathname === "/health") && req.method === "GET") {
+  if (pathname === "/health" && req.method === "GET") {
     return jsonRes(res, 200, {
       status:  "ok",
       service: "Music AI Proxy",
@@ -441,7 +441,7 @@ const server = http.createServer(async (req, res) => {
 
   // Static UI (optional)
   const htmlPath = path.join(__dirname, "public", "index.html");
-  if (pathname === "/ui" && fs.existsSync(htmlPath)) {
+  if ((pathname === "/" || pathname === "/ui") && req.method === "GET" && fs.existsSync(htmlPath)) {
     res.writeHead(200, { "Content-Type": "text/html" });
     return res.end(fs.readFileSync(htmlPath, "utf-8"));
   }

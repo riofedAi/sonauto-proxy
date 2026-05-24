@@ -1,22 +1,61 @@
+# render.yaml — Music AI Proxy
+# Deploy: connect repo on render.com → "New Web Service" → select this file
+# Docs  : https://render.com/docs/render-yaml-spec
+
 services:
   - type: web
     name: sonauto-proxy-pro
     env: node
     plan: free
     branch: main
-    buildCommand: npm install
+    buildCommand: npm install --omit=dev
     startCommand: node server.js
     autoDeploy: true
-    healthCheckPath: "/"
+    healthCheckPath: /health
+
     envVars:
+      # ── Sonauto ──────────────────────────────────────────────────────────
       - key: EXPO_PUBLIC_SONAUTO_API_KEY
-        value: "<SET_YOUR_SONAUTO_API_KEY_IN_RENDER_DASHBOARD>"
+        sync: false          # set manually in Render dashboard
+
+      # ── ACE-Step ─────────────────────────────────────────────────────────
+      - key: ACESTEP_API_KEY
+        sync: false          # set manually in Render dashboard
+      - key: ACESTEP_BASE_URL
+        value: https://api.acemusic.ai
+
+      # ── Storage ───────────────────────────────────────────────────────────
+      # Render disk is ephemeral — keep AUTO_DOWNLOAD=false
+      # Audio is kept in memory for IN_MEMORY_TTL_MS ms, then auto-purged
       - key: AUTO_DOWNLOAD
         value: "false"
+      - key: IN_MEMORY_TTL_MS
+        value: "1800000"     # 30 minutes
+
+      # ── S3 (optional — uncomment to enable persistent storage) ────────────
+      # - key: AWS_S3_BUCKET
+      #   sync: false
+      # - key: AWS_ACCESS_KEY_ID
+      #   sync: false
+      # - key: AWS_SECRET_ACCESS_KEY
+      #   sync: false
+      # - key: AWS_REGION
+      #   value: us-east-1
+
+      # ── Keep-alive (prevents Render free tier sleep) ──────────────────────
       - key: ENABLE_KEEP_ALIVE
         value: "true"
       - key: KEEP_ALIVE_URL
-        value: "<SET_YOUR_RENDER_SERVICE_URL_HERE>"
+        value: ""            # set to your Render URL: https://xxx.onrender.com/health
+      - key: KEEP_ALIVE_INTERVAL_MS
+        value: "240000"      # ping every 4 minutes
+
+      # ── Optional: protect /generate endpoint ─────────────────────────────
       - key: CLIENT_API_KEY
-        value: ""
-    disk: 1024
+        value: ""            # leave empty to disable auth
+
+      # ── Polling tuning ────────────────────────────────────────────────────
+      - key: MAX_POLL_ATTEMPTS
+        value: "60"
+      - key: POLL_BASE_DELAY_MS
+        value: "4000"

@@ -1,211 +1,541 @@
-<!doctype html>
-<html>
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sonauto Proxy — PRO Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a14;--surface:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
+  --purple:#7c3aed;--purple-lt:#a78bfa;--green:#34d399;--red:#f87171;--amber:#fbbf24;
+  --text:#e5e7eb;--muted:#6b7280;--mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+.shell{max-width:1060px;margin:0 auto;padding:28px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-name{font-size:18px;font-weight:800;letter-spacing:3px}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:1px}
+.pill{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-family:var(--mono)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pdot 2s ease-in-out infinite}
+.dot.busy{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:none}
+.dot.error{background:var(--red);box-shadow:none;animation:none}
+.dot.idle{background:var(--muted);box-shadow:none;animation:none}
 
-<body class="bg-gray-50 text-gray-900">
-  <div class="max-w-6xl mx-auto p-6">
-    <header class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-bold">Sonauto Proxy — PRO</h1>
-      <div class="text-sm text-gray-600">Status: <span id="statusBadge" class="font-medium text-green-600">Ready</span>
+.grid{display:grid;grid-template-columns:390px 1fr;gap:16px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px}
+.card-title{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+
+.seg{display:flex;background:rgba(0,0,0,0.35);border-radius:10px;padding:3px;gap:3px}
+.seg-btn{flex:1;padding:8px 4px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;letter-spacing:.3px;white-space:nowrap}
+.seg-btn.active{background:rgba(124,58,237,0.22);color:var(--purple-lt);border:1px solid rgba(124,58,237,0.35)}
+
+.lbl{display:block;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:16px}
+.lbl:first-child,.lbl.no-top{margin-top:0}
+
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:9px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;resize:vertical;
+  transition:border-color .2s
+}
+input:focus,select:focus,textarea:focus{border-color:var(--purple)}
+select option{background:#1a1a2e}
+
+.model-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.model-card{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s}
+.model-card:hover{border-color:rgba(124,58,237,0.4)}
+.model-card.active{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.45)}
+.model-card-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
+.model-card.active .model-card-name{color:var(--purple-lt)}
+.model-card-desc{font-size:10px;color:var(--muted);line-height:1.4;font-family:var(--mono)}
+
+.source-zone{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s}
+.source-zone:hover{border-color:rgba(124,58,237,0.5)}
+.source-zone input[type=file]{display:none}
+.source-zone-icon{font-size:20px;display:block;margin-bottom:4px}
+.source-zone-label{font-size:11px;color:var(--muted);display:block}
+.source-info{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px}
+.source-info span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-meta{font-size:10px;color:var(--muted);flex-shrink:0}
+.x-btn{cursor:pointer;background:none;border:none;color:var(--green);font-size:14px;opacity:.7;flex-shrink:0}
+.x-btn:hover{opacity:1}
+
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:var(--text);cursor:pointer}
+.toggle-wrap input[type=checkbox]{width:auto;accent-color:var(--purple)}
+
+.adv-toggle{width:100%;padding:8px;border:none;background:none;color:rgba(124,58,237,.6);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:color .2s;margin-top:14px}
+.adv-toggle:hover{color:var(--purple-lt)}
+.adv-panel{overflow:hidden;max-height:0;transition:max-height .3s ease}
+.adv-panel.open{max-height:400px;border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.range-wrap{margin-top:6px}
+.range-wrap input[type=range]{padding:0;height:4px;border:none;border-radius:2px;background:rgba(255,255,255,0.1);accent-color:var(--purple);width:100%;margin-bottom:4px}
+.range-val{color:var(--purple-lt)}
+.range-hint{font-size:10px;color:var(--muted);font-style:italic}
+
+hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+
+.btn-gen{width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;cursor:pointer;transition:opacity .2s,transform .15s;box-shadow:0 4px 20px rgba(124,58,237,0.25)}
+.btn-gen:hover{opacity:.9;transform:translateY(-1px)}
+.btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+.right-col{display:flex;flex-direction:column;gap:16px}
+
+.prog-wrap{height:2px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:14px;opacity:0;transition:opacity .3s}
+.prog-wrap.on{opacity:1}
+.prog-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--green));transition:width .5s ease}
+
+.status-display{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--muted)}
+.status-icon{font-size:15px;flex-shrink:0}
+
+.tracks-list{display:flex;flex-direction:column;gap:9px}
+.track-card{display:flex;align-items:center;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);gap:12px;animation:fadeUp .4s ease both}
+.track-badge{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#4f46e5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.track-info{flex:1;min-width:0}
+.track-name{font-size:12px;font-weight:700;margin-bottom:2px}
+.track-url{font-family:var(--mono);font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track-actions{display:flex;gap:7px;flex-shrink:0}
+.tbtn{padding:6px 11px;border-radius:7px;border:none;font-size:10px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:opacity .2s}
+.tbtn:hover{opacity:.8}
+.tbtn-dl{background:#16a34a;color:#fff}
+.tbtn-open{background:rgba(124,58,237,0.2);color:var(--purple-lt);border:1px solid rgba(124,58,237,0.3)!important}
+
+.skeleton{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.skel-circle{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0}
+.skel-lines{flex:1}
+.skel-line{height:9px;border-radius:5px;background:rgba(255,255,255,0.08);animation:shimmer 1.4s ease-in-out infinite}
+.skel-line+.skel-line{margin-top:7px;width:50%}
+.empty-state{text-align:center;color:var(--muted);font-size:12px;padding:28px 0}
+.mode-desc{font-size:11px;color:var(--muted);font-style:italic;margin-top:8px;margin-bottom:16px;min-height:16px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%,100%{opacity:.4}50%{opacity:.9}}
+@keyframes pdot{0%,100%{box-shadow:0 0 6px var(--green)}50%{box-shadow:0 0 14px var(--green)}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<div class="shell">
+  <header>
+    <div class="logo">
+      <div class="logo-mark">🎵</div>
+      <div>
+        <div class="logo-name">CANTIQUE AI</div>
+        <div class="logo-sub">STUDIO · PROXY DASHBOARD</div>
       </div>
-    </header>
+    </div>
+    <div class="pill">
+      <div class="dot idle" id="dot"></div>
+      <span id="statusText">Ready</span>
+    </div>
+  </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <section class="lg:col-span-1 bg-white p-4 rounded shadow">
-        <h2 class="font-semibold mb-2">Generate</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Génération musicale</div>
 
-        <label class="block text-sm mb-1">Modèle (Engine)</label>
-        <select id="engine" class="w-full p-2 border rounded mb-3">
-          <option value="sonauto">Sonauto</option>
-          <option value="acestep">ACE-Step</option>
-        </select>
+      <span class="lbl no-top">Moteur IA</span>
+      <div class="seg" style="margin-top:6px">
+        <button class="seg-btn active" data-e="acestep" onclick="selectEngine('acestep')">⚡ ACE-Step</button>
+        <button class="seg-btn"        data-e="sonauto" onclick="selectEngine('sonauto')">🎵 Sonauto</button>
+      </div>
 
-        <label class="block text-sm mb-1">Mode</label>
-        <select id="mode" class="w-full p-2 border rounded mb-3">
-          <option value="custom">Paroles (custom)</option>
-          <option value="prompt">Prompt</option>
-          <option value="instrumental">Instrumental</option>
-        </select>
-
-        <div id="fieldLyrics" class="mb-3">
-          <label class="block text-sm">Paroles</label>
-          <textarea id="lyrics" rows="4"
-            class="w-full p-2 border rounded">Jésus tu es mon tout, ma lumière, ma foi, mon roi, mon secours chaque jour.</textarea>
-        </div>
-
-        <div id="fieldPrompt" class="hidden mb-3">
-          <label class="block text-sm">Prompt</label>
-          <input id="prompt" class="w-full p-2 border rounded"
-            value="A calm pop ballad with warm piano and emotional vocals about love and hope." />
-        </div>
-
-        <label class="block text-sm mb-1">Tags (comma separated)</label>
-        <input id="tags" class="w-full p-2 border rounded mb-3" value="ballad,worship,emotional,modern" />
-
-        <label class="block text-sm mb-1">Client key (optional)</label>
-        <input id="clientKey" class="w-full p-2 border rounded mb-3"
-          placeholder="X-CLIENT-KEY header if used on server" />
-
-        <button id="btnGenerate" class="w-full bg-indigo-600 text-white p-3 rounded font-semibold">🎵 Générer 2
-          pistes</button>
-      </section>
-
-      <section class="lg:col-span-2 bg-white p-4 rounded shadow">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="font-semibold">Tasks & Logs</h2>
-          <div class="flex gap-2">
-            <button id="btnClear" class="px-3 py-1 bg-gray-200 rounded">Clear</button>
+      <div id="modelSection">
+        <span class="lbl">Famille de modèle</span>
+        <div class="model-cards">
+          <div class="model-card active" data-model="acemusic/acestep-v1.5-xl-turbo" onclick="selectModel(this)">
+            <div class="model-card-name">XL Turbo</div>
+            <div class="model-card-desc">Rapide · tous les modes</div>
+          </div>
+          <div class="model-card" data-model="acemusic/acestep-v1.5-xl-sft" onclick="selectModel(this)">
+            <div class="model-card-name">XL SFT</div>
+            <div class="model-card-desc">Précis · Lego / Compléter</div>
           </div>
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <span class="lbl">Mode</span>
+      <div class="seg" style="margin-top:6px;flex-wrap:wrap;gap:4px" id="modeSegs">
+        <button class="seg-btn active" data-m="simple"   onclick="setMode('simple')">✨ Simple</button>
+        <button class="seg-btn"        data-m="custom"   onclick="setMode('custom')">✍️ Custom</button>
+        <button class="seg-btn"        data-m="remix"    onclick="setMode('remix')">🔀 Remix</button>
+        <button class="seg-btn"        data-m="repaint"  onclick="setMode('repaint')">🖌️ Repaint</button>
+        <button class="seg-btn"        data-m="retake"   onclick="setMode('retake')">🎲 Retake</button>
+        <button class="seg-btn"        data-m="lego"     onclick="setMode('lego')">🧱 Lego</button>
+        <button class="seg-btn"        data-m="complete" onclick="setMode('complete')">🎹 Compléter</button>
+      </div>
+      <div class="mode-desc" id="modeDesc">L'IA gère les paroles — entrez un prompt musical</div>
+
+      <div id="sourceSection" style="display:none">
+        <span class="lbl">Audio source</span>
+        <div style="margin-top:6px" id="sourceUploadZone">
+          <label class="source-zone" for="fileInput">
+            <span class="source-zone-icon">🎧</span>
+            <span class="source-zone-label">Cliquer pour choisir un fichier audio</span>
+            <span class="source-zone-label" style="font-size:10px;margin-top:2px">MP3, WAV, FLAC · max 20 Mo</span>
+            <input type="file" id="fileInput" accept="audio/mpeg,audio/wav,audio/flac,audio/x-flac,audio/mp3" onchange="handleFile(this)">
+          </label>
+        </div>
+        <div class="source-info" id="sourceInfo" style="display:none">
+          <span id="sourceName"></span>
+          <span class="file-meta" id="fileMeta"></span>
+          <button class="x-btn" onclick="clearSource()">✕</button>
+        </div>
+      </div>
+
+      <div id="fieldPrompt">
+        <span class="lbl" id="promptLabel">Description musicale</span>
+        <textarea id="prompt" rows="3" placeholder="Ex: gospel afro-pop, piano et cordes, voix féminine émotive…" style="margin-top:6px">Gospel afro-pop, piano et cordes, voix féminine émotive, tempo modéré</textarea>
+      </div>
+
+      <div id="fieldLyrics" style="display:none">
+        <span class="lbl">Paroles</span>
+        <textarea id="lyrics" rows="5" placeholder="[Verse 1]&#10;Vos paroles…&#10;&#10;[Chorus]&#10;…" style="margin-top:6px"></textarea>
+      </div>
+
+      <div style="margin-top:16px">
+        <span class="lbl">Style / Tags</span>
+        <input type="text" id="tags" value="worship, gospel, emotional, afro-pop" style="margin-top:6px">
+      </div>
+
+      <div style="margin-top:16px">
+        <span class="lbl">Titre <span style="color:var(--muted);font-size:9px;text-transform:none;letter-spacing:0;font-weight:400">(optionnel — auto si vide)</span></span>
+        <input type="text" id="titleField" placeholder="Laissez vide pour auto-générer" style="margin-top:6px">
+      </div>
+
+      <div id="fieldInstrumental" style="display:none">
+        <label class="toggle-wrap">
+          <input type="checkbox" id="instrumental"> Instrumental (sans voix)
+        </label>
+      </div>
+
+      <button class="adv-toggle" id="advToggle" onclick="toggleAdv()">▼ Paramètres avancés</button>
+      <div class="adv-panel" id="advPanel">
+        <div class="field-row">
           <div>
-            <label class="block text-sm">Task ID</label>
-            <input id="taskId" class="w-full p-2 border rounded mb-2" placeholder="task-id..." />
-            <div class="flex gap-2">
-              <button id="btnCheck" class="px-3 py-2 bg-yellow-500 rounded text-white">🔎 Vérifier</button>
-            </div>
-            <div class="mt-4">
-              <h3 class="font-medium mb-2">Tracks</h3>
-              <ul id="tracks" class="space-y-2"></ul>
-            </div>
+            <span class="lbl no-top">BPM</span>
+            <input type="number" id="bpm" placeholder="Auto" min="40" max="220" style="margin-top:6px">
           </div>
-
           <div>
-            <h3 class="font-medium mb-2">Logs</h3>
-            <pre id="log" class="h-72 overflow-auto p-3 bg-black text-green-200 rounded text-sm"></pre>
+            <span class="lbl no-top">Durée (s)</span>
+            <input type="number" id="duration" value="60" min="10" max="240" style="margin-top:6px">
           </div>
         </div>
-      </section>
+
+        <div id="advRemix" style="display:none;margin-top:14px">
+          <span class="lbl no-top">Influence structure — <span class="range-val" id="strengthVal">0.65</span></span>
+          <div class="range-wrap">
+            <input type="range" id="coverStrength" min="0" max="1" step="0.05" value="0.65" oninput="document.getElementById('strengthVal').textContent=parseFloat(this.value).toFixed(2)">
+            <div class="range-hint">0 = style libre · 1 = suit la structure source</div>
+          </div>
+        </div>
+
+        <div id="advRepaint" style="display:none">
+          <div class="field-row" style="margin-top:14px">
+            <div>
+              <span class="lbl no-top">Début (s)</span>
+              <input type="number" id="repaintStart" value="0" style="margin-top:6px">
+            </div>
+            <div>
+              <span class="lbl no-top">Fin (s)</span>
+              <input type="number" id="repaintEnd" value="20" style="margin-top:6px">
+            </div>
+          </div>
+        </div>
+
+        <div id="advRetake" style="display:none;margin-top:14px">
+          <span class="lbl no-top">Variance — <span class="range-val" id="varianceVal">0.30</span></span>
+          <div class="range-wrap">
+            <input type="range" id="retakeVariance" min="0" max="1" step="0.05" value="0.3" oninput="document.getElementById('varianceVal').textContent=parseFloat(this.value).toFixed(2)">
+            <div class="range-hint">0.0 = quasi identique · 1.0 = très différent</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <span class="lbl no-top">Langue vocale</span>
+          <select id="vocalLang" style="margin-top:6px">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="pt">Português</option>
+          </select>
+        </div>
+      </div>
+
+      <hr>
+      <button class="btn-gen" id="btnGen" onclick="handleGenerate()">✦ Générer</button>
     </div>
 
-    <footer class="mt-6 text-sm text-gray-600">
-      <p>Keep AUTO_DOWNLOAD=false on Render. To persist tracks, configure S3 and set AWS env vars.</p>
-    </footer>
+    <div class="right-col">
+      <div class="card">
+        <div class="card-title">Statut</div>
+        <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+        <div class="status-display">
+          <span class="status-icon" id="statusIcon">◇</span>
+          <span id="statusMsg">Studio prêt · en attente</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0">Pistes générées</div>
+          <button style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#7c3aed';this.style.color='#a78bfa'" onmouseout="this.style.borderColor='';this.style.color=''" onclick="clearAll()">Effacer tout</button>
+        </div>
+        <div id="tracksList" class="tracks-list">
+          <div class="empty-state">Aucune piste — lancez une génération ✦</div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <script>
-    const apiBase = '';
-    function log(msg) {
-      const el = document.getElementById('log');
-      el.textContent = new Date().toISOString() + ' | ' + msg + "\n" + el.textContent;
-    }
-    function setStatusText(t) { document.getElementById('statusBadge').textContent = t; }
+<script>
+const MAX_FILE_MB = 20;
 
-    document.getElementById('mode').addEventListener('change', (e) => {
-      const m = e.target.value;
-      document.getElementById('fieldLyrics').style.display = m === 'custom' ? 'block' : 'none';
-      document.getElementById('fieldPrompt').style.display = (m === 'prompt' || m === 'instrumental') ? 'block' : 'none';
-    });
+const MODELS_ACESTEP = [
+  { id:'acemusic/acestep-v1.5-xl-turbo', name:'XL Turbo', desc:'Rapide · tous les modes' },
+  { id:'acemusic/acestep-v1.5-xl-sft',   name:'XL SFT',   desc:'Précis · Lego / Compléter' },
+];
 
-    document.getElementById('btnGenerate').addEventListener('click', async () => {
-      setStatusText('Submitting...');
-      const mode = document.getElementById('mode').value;
-      const engine = document.getElementById('engine').value;
-      const payload = { mode, engine };
-      if (mode === 'custom') payload.lyrics = document.getElementById('lyrics').value;
-      if (mode === 'prompt' || mode === 'instrumental') payload.prompt = document.getElementById('prompt').value;
-      payload.tags = document.getElementById('tags').value.split(',').map(s => s.trim());
-      const clientKey = document.getElementById('clientKey').value.trim();
+const MODES = {
+  simple:   { desc:"L'IA gère les paroles — entrez un prompt musical", audio:false, prompt:true,  lyrics:false, instr:false },
+  custom:   { desc:'Entrez vos propres paroles + style',                audio:false, prompt:false, lyrics:true,  instr:true  },
+  remix:    { desc:"Transformer le style d'un audio existant",          audio:true,  prompt:true,  lyrics:false, instr:false },
+  repaint:  { desc:'Régénérer une section précise de la piste',         audio:true,  prompt:true,  lyrics:false, instr:false },
+  retake:   { desc:'Variation légère du même morceau',                  audio:true,  prompt:false, lyrics:false, instr:false },
+  lego:     { desc:'Ajouter une couche instrumentale sur la piste',     audio:true,  prompt:true,  lyrics:false, instr:false },
+  complete: { desc:"Générer un accompagnement pour une voix",           audio:true,  prompt:true,  lyrics:false, instr:false }
+};
 
-      try {
-        const r = await fetch('/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(clientKey ? { 'X-CLIENT-KEY': clientKey } : {}) },
-          body: JSON.stringify(payload)
-        });
-        const data = await r.json();
-        if (data.status === 'SUBMITTED' || data.taskId) {
-          log('Submitted: ' + data.taskId);
-          document.getElementById('taskId').value = data.taskId;
-          setStatusText('Submitted');
-          pollStatusAndShow(data.taskId);
-        } else {
-          log('Error: ' + JSON.stringify(data));
-          setStatusText('Error');
-        }
-      } catch (err) {
-        log('Request failed: ' + err.message);
-        setStatusText('Error');
+const PROMPT_LABELS = {
+  remix:'Nouveau style souhaité', repaint:'Style de la section',
+  lego:'Instrument à ajouter',   complete:"Style d'accompagnement"
+};
+
+const S = {
+  engine: 'acestep',
+  model:  'acemusic/acestep-v1.5-xl-turbo',
+  mode:   'simple',
+  b64:    null,
+  fname:  null,
+  polling: false,
+  currentTaskId: null
+};
+
+function selectEngine(e) {
+  S.engine = e;
+  document.querySelectorAll('[data-e]').forEach(b => b.classList.toggle('active', b.dataset.e === e));
+  document.getElementById('modelSection').style.display = e === 'acestep' ? 'block' : 'none';
+  const isSonauto = e === 'sonauto';
+  document.querySelectorAll('#modeSegs .seg-btn').forEach(b => {
+    b.style.display = (isSonauto && MODES[b.dataset.m]?.audio) ? 'none' : '';
+  });
+  if (isSonauto && MODES[S.mode]?.audio) setMode('simple');
+  else updateUI();
+}
+
+function selectModel(el) {
+  document.querySelectorAll('.model-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.model = el.dataset.model;
+}
+
+function setMode(m) {
+  S.mode = m;
+  document.querySelectorAll('#modeSegs .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+  document.getElementById('modeDesc').textContent = MODES[m]?.desc || '';
+  updateUI();
+}
+
+function updateUI() {
+  const m = MODES[S.mode];
+  document.getElementById('sourceSection').style.display     = m.audio  ? 'block' : 'none';
+  document.getElementById('fieldPrompt').style.display       = m.prompt  ? 'block' : 'none';
+  document.getElementById('fieldLyrics').style.display       = m.lyrics  ? 'block' : 'none';
+  document.getElementById('fieldInstrumental').style.display = m.instr   ? 'block' : 'none';
+  document.getElementById('promptLabel').textContent = PROMPT_LABELS[S.mode] || 'Description musicale';
+  document.getElementById('advRemix').style.display   = S.mode === 'remix'   ? 'block' : 'none';
+  document.getElementById('advRepaint').style.display = S.mode === 'repaint' ? 'block' : 'none';
+  document.getElementById('advRetake').style.display  = S.mode === 'retake'  ? 'block' : 'none';
+}
+
+function toggleAdv() {
+  const p = document.getElementById('advPanel');
+  const open = p.classList.toggle('open');
+  document.getElementById('advToggle').textContent = (open ? '▲' : '▼') + ' Paramètres avancés';
+}
+
+function handleFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const mb = file.size / 1024 / 1024;
+  if (mb > MAX_FILE_MB) {
+    alert('Fichier trop volumineux (' + mb.toFixed(1) + ' Mo). Limite : ' + MAX_FILE_MB + ' Mo.');
+    input.value = ''; return;
+  }
+  const allowed = ['audio/mpeg','audio/mp3','audio/wav','audio/flac','audio/x-flac'];
+  if (!allowed.includes(file.type) && !file.name.match(/\.(mp3|wav|flac)$/i)) {
+    alert('Format non supporté. Utilisez MP3, WAV ou FLAC.');
+    input.value = ''; return;
+  }
+  const r = new FileReader();
+  r.onload = e => {
+    S.b64 = e.target.result.split(',')[1];
+    S.fname = file.name;
+    document.getElementById('sourceName').textContent = file.name;
+    document.getElementById('fileMeta').textContent = mb.toFixed(1) + ' Mo';
+    document.getElementById('sourceInfo').style.display = 'flex';
+    document.getElementById('sourceUploadZone').style.display = 'none';
+    setStatusMsg('Audio chargé : ' + file.name, '✓');
+  };
+  r.readAsDataURL(file);
+}
+
+function clearSource() {
+  S.b64 = null; S.fname = null;
+  document.getElementById('sourceInfo').style.display = 'none';
+  document.getElementById('sourceUploadZone').style.display = 'block';
+  document.getElementById('fileInput').value = '';
+  setStatusMsg('Source audio retirée', '◇');
+}
+
+function buildPayload() {
+  const m = MODES[S.mode];
+  if (m.audio && !S.b64) { alert('⚠️ Ce mode nécessite un fichier audio source.'); return null; }
+
+  const tags   = document.getElementById('tags').value.split(',').map(s => s.trim()).filter(Boolean);
+  const bpm    = parseInt(document.getElementById('bpm').value) || undefined;
+  const dur    = parseFloat(document.getElementById('duration').value) || 60;
+  const instr  = document.getElementById('instrumental').checked;
+  const prompt = document.getElementById('prompt').value;
+  const lyrics = document.getElementById('lyrics').value;
+  const title  = document.getElementById('titleField').value.trim();
+  const lang   = document.getElementById('vocalLang').value;
+
+  if (S.engine === 'sonauto') {
+    return { engine:'sonauto', mode: S.mode === 'custom' ? 'custom' : 'simple',
+      tags, instrumental: instr,
+      prompt: m.prompt ? prompt : undefined,
+      lyrics: m.lyrics ? lyrics : undefined,
+      title: title || undefined };
+  }
+
+  const audio = S.b64 ? [{ type:'input_audio', input_audio:{ data:S.b64, format: S.fname?.match(/\.wav$/i) ? 'wav' : 'mp3' }}] : [];
+  const base  = { engine:'acestep', model: S.model, duration:dur, vocal_language:lang, instrumental:instr, thinking:true };
+  if (bpm) base.bpm = bpm;
+
+  let content = '';
+  if (m.prompt) {
+    let p = '<prompt>' + prompt;
+    if (tags.length) p += '\nStyle: ' + tags.join(', ');
+    if (title) p += '\nTitle: ' + title;
+    p += '</prompt>';
+    content = p;
+  }
+  if (m.lyrics) content += '<lyrics>' + lyrics + '</lyrics>';
+  if (!content) content = '<prompt>create a variation</prompt>';
+
+  const msgs = [{ role:'user', content: audio.length ? [...audio, { type:'text', text:content }] : content }];
+
+  switch (S.mode) {
+    case 'remix':    return { ...base, task_type:'remix',    audio_cover_strength: parseFloat(document.getElementById('coverStrength').value), messages:msgs };
+    case 'repaint':  return { ...base, task_type:'repaint',  repaint_start: parseFloat(document.getElementById('repaintStart').value)||0, repaint_end: parseFloat(document.getElementById('repaintEnd').value)||20, messages:msgs };
+    case 'retake':   return { ...base, task_type:'retake',   retake_variance: parseFloat(document.getElementById('retakeVariance').value), messages:msgs };
+    case 'lego':     return { ...base, task_type:'lego',     instrumental:true, messages:msgs };
+    case 'complete': return { ...base, task_type:'complete', instrumental:true, messages:msgs };
+    default:         return { ...base, messages:msgs };
+  }
+}
+
+function setStatusMsg(msg, icon) {
+  document.getElementById('statusMsg').textContent = msg;
+  if (icon) document.getElementById('statusIcon').textContent = icon;
+}
+function setDot(type) { document.getElementById('dot').className = 'dot' + (type ? ' ' + type : ''); }
+function setProgress(pct, show=true) {
+  document.getElementById('progWrap').classList.toggle('on', show);
+  document.getElementById('progBar').style.width = Math.round(pct) + '%';
+}
+
+async function handleGenerate() {
+  const payload = buildPayload(); if (!payload) return;
+  const btn = document.getElementById('btnGen');
+  btn.disabled = true; btn.textContent = '⏳ Génération…';
+  setDot('busy'); setProgress(5); showSkeletons();
+  setStatusMsg('Envoi de la requête…', '↑');
+  try {
+    const r = await fetch('/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const d = await r.json();
+    if (d.status === 'SUBMITTED' && d.taskId) {
+      S.currentTaskId = d.taskId;
+      setProgress(12);
+      setStatusMsg('Tâche soumise · en cours…', '🔄');
+      pollTask(d.taskId);
+    } else throw new Error(d.message || 'Réponse inattendue');
+  } catch(err) {
+    setStatusMsg('Erreur : ' + err.message, '✕');
+    setDot('error'); setProgress(0, false); clearSkeletons(); resetBtn();
+  }
+}
+
+async function pollTask(taskId, max=120) {
+  S.polling = true; let n = 0, pct = 12;
+  const MAP = { PROCESSING:'Traitement…', GENERATING:'Génération audio…', WAITING:'En attente…', IN_PROGRESS:'En cours…', DECOMPRESSING:'Finalisation…' };
+  const tick = async () => {
+    if (!S.polling) return; n++;
+    try {
+      const r = await fetch('/status/' + encodeURIComponent(taskId));
+      const d = await r.json();
+      const st = (d.status || '').toUpperCase();
+      if (st === 'SUCCESS') {
+        setProgress(100); setDot('');
+        setStatusMsg((d.song_paths||[]).length + ' piste(s) générée(s) avec succès', '✓');
+        showTracks(d.song_paths||[], taskId); S.polling = false; resetBtn(); return;
       }
-    });
-
-    document.getElementById('btnCheck').addEventListener('click', async () => {
-      const taskId = document.getElementById('taskId').value.trim();
-      if (!taskId) { alert('Renseigne un task ID'); return; }
-      pollStatusAndShow(taskId);
-    });
-
-    document.getElementById('btnClear').addEventListener('click', () => {
-      document.getElementById('log').textContent = '';
-      document.getElementById('tracks').innerHTML = '';
-      setStatusText('Ready');
-    });
-
-    async function pollStatusAndShow(taskId) {
-      setStatusText('Polling...');
-      for (let i = 0; i < 60; i++) {
-        try {
-          const r = await fetch('/status/' + encodeURIComponent(taskId));
-          const d = await r.json();
-          log('Status: ' + d.status);
-          if (d.status === 'SUCCESS') {
-            setStatusText('Success');
-            showTracks(d.song_paths || []);
-            return;
-          }
-          if (d.status === 'FAILURE') {
-            setStatusText('Failure');
-            log('Failure: ' + (d.error_message || 'unknown'));
-            return;
-          }
-        } catch (err) {
-          log('Poll error: ' + err.message);
-          setStatusText('Error');
-          return;
-        }
-        await new Promise(r => setTimeout(r, 4000));
+      if (st === 'FAILURE') {
+        setStatusMsg('Échec : ' + (d.error_message||'inconnu'), '✕');
+        setDot('error'); setProgress(0, false); clearSkeletons(); S.polling = false; resetBtn(); return;
       }
-      setStatusText('Timeout');
-      log('Polling timeout');
+      pct = Math.min(90, pct + (n < 20 ? 3 : 1));
+      setProgress(pct);
+      setStatusMsg(MAP[st] || 'En cours…', '🔄');
+      if (n < max) setTimeout(tick, 4000);
+      else { setStatusMsg('Timeout — veuillez réessayer', '⚠'); setDot('error'); clearSkeletons(); resetBtn(); S.polling = false; }
+    } catch(err) {
+      if (n < max) setTimeout(tick, 4000);
+      else { clearSkeletons(); resetBtn(); S.polling = false; }
     }
+  };
+  tick();
+}
 
-    function showTracks(urls) {
-      const ul = document.getElementById('tracks');
-      ul.innerHTML = '';
-      urls.forEach((u, i) => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between p-3 border rounded';
-        const name = document.createElement('div');
-        name.innerHTML = '<strong>Track ' + (i + 1) + '</strong><div class="text-xs text-gray-500">' + u + '</div>';
-        const actions = document.createElement('div');
-        actions.className = 'flex gap-2';
-        const open = document.createElement('a');
-        open.href = u;
-        open.target = '_blank';
-        open.className = 'px-3 py-1 bg-indigo-600 text-white rounded';
-        open.textContent = u.startsWith('/') ? 'Download' : 'Open';
-        actions.appendChild(open);
-        if (!u.startsWith('/')) {
-          const proxy = document.createElement('a');
-          proxy.href = '/download?url=' + encodeURIComponent(u);
-          proxy.className = 'px-3 py-1 bg-green-600 text-white rounded';
-          proxy.textContent = 'Download (proxy)';
-          actions.appendChild(proxy);
-        }
-        li.appendChild(name);
-        li.appendChild(actions);
-        ul.appendChild(li);
-      });
-      log('Tracks shown: ' + urls.length);
-    }
-  </script>
-</body>
+function showTracks(paths, taskId) {
+  clearSkeletons();
+  const list = document.getElementById('tracksList');
+  if (!paths.length) { list.innerHTML = '<div class="empty-state">Aucune piste retournée</div>'; return; }
+  const prefix = taskId?.startsWith('sonauto-') ? 'Sonauto' : 'ACE-Step';
+  list.innerHTML = '';
+  paths.forEach((u, i) => {
+    const abs = u.startsWith('/') ? window.location.origin + u : u;
+    const el = document.createElement('div');
+    el.className = 'track-card'; el.style.animationDelay = (i * .06) + 's';
+    el.innerHTML = '<div class="track-badge">' + (i+1) + '</div><div class="track-info"><div class="track-name">' + prefix + ' · Piste ' + (i+1) + '</div><div class="track-url">' + u + '</div></div><div class="track-actions"><a class="tbtn tbtn-dl" href="' + abs + '" download="piste_' + (i+1) + '.mp3">⬇ DL</a><a class="tbtn tbtn-open" href="' + abs + '" target="_blank">▶ Ouvrir</a></div>';
+    list.appendChild(el);
+  });
+}
 
-</html>
+function showSkeletons() {
+  document.getElementById('tracksList').innerHTML = [1,2].map(()=>'<div class="skeleton"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line"></div></div></div>').join('');
+}
+function clearSkeletons() {
+  const l = document.getElementById('tracksList');
+  if (l.querySelector('.skeleton')) l.innerHTML = '<div class="empty-state">Aucune piste — lancez une génération ✦</div>';
+}
+function clearAll() {
+  S.polling = false; clearSkeletons(); setProgress(0, false);
+  setDot('idle'); setStatusMsg('Studio prêt · en attente', '◇'); resetBtn();
+}
+function resetBtn() { const b = document.getElementById('btnGen'); b.disabled = false; b.textContent = '✦ Générer'; }
+
+updateUI(); setDot('idle');
+</script>

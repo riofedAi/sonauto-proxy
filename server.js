@@ -8,6 +8,11 @@
  *   - Optional S3 for persistence across restarts (AWS_S3_BUCKET + credentials)
  *   - AUTO_DOWNLOAD=false recommended on Render (ephemeral disk)
  *
+ * Security:
+ *   - Daily rate limit: 8 generations / IP / day
+ *   - Max body size: 25 MB
+ *   - Audio validation: base64 size check, format check
+ *
  * Env variables:
  *   EXPO_PUBLIC_SONAUTO_API_KEY   — Sonauto API key
  *   ACESTEP_API_KEY               — ACE-Step API key
@@ -19,6 +24,8 @@
  *   AUTO_DOWNLOAD                 — save Sonauto tracks to disk (default: false)
  *   AWS_S3_BUCKET / AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_REGION — optional
  *   IN_MEMORY_TTL_MS              — how long to keep audio in memory (default: 30 min)
+ *   DAILY_LIMIT                   — max generations per IP per day (default: 8)
+ *   MAX_BODY_SIZE_MB              — max JSON body size in MB (default: 25)
  */
 
 require("dotenv").config();
@@ -33,23 +40,24 @@ const streamPipeline = promisify(pipeline);
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const PORT             = process.env.PORT || 3000;
-const SONAUTO_API_KEY  = process.env.EXPO_PUBLIC_SONAUTO_API_KEY;
-const ACESTEP_API_KEY  = process.env.ACESTEP_API_KEY || "";
-const ACESTEP_BASE_URL = process.env.ACESTEP_BASE_URL || "https://api.acemusic.ai";
-const CLIENT_API_KEY   = process.env.CLIENT_API_KEY || null;
-const AUTO_DOWNLOAD    = process.env.AUTO_DOWNLOAD === "true";
-const SONAUTO_BASE_URL = "https://api.sonauto.ai/v1";
-const IN_MEMORY_TTL    = parseInt(process.env.IN_MEMORY_TTL_MS) || 30 * 60 * 1000; // 30 min
+const PORT              = process.env.PORT || 3000;
+const SONAUTO_API_KEY   = process.env.EXPO_PUBLIC_SONAUTO_API_KEY;
+const ACESTEP_API_KEY   = process.env.ACESTEP_API_KEY || "";
+const ACESTEP_BASE_URL  = process.env.ACESTEP_BASE_URL || "https://api.acemusic.ai";
+const CLIENT_API_KEY    = process.env.CLIENT_API_KEY || null;
+const AUTO_DOWNLOAD     = process.env.AUTO_DOWNLOAD === "true";
+const SONAUTO_BASE_URL  = "https://api.sonauto.ai/v1";
+const IN_MEMORY_TTL     = parseInt(process.env.IN_MEMORY_TTL_MS) || 30 * 60 * 1000; // 30 min
+const DAILY_LIMIT       = parseInt(process.env.DAILY_LIMIT) || 8;
+const MAX_BODY_SIZE     = (parseInt(process.env.MAX_BODY_SIZE_MB) || 25) * 1024 * 1024; // 25 MB
+const MAX_AUDIO_BASE64  = 15 * 1024 * 1024; // ~15 MB base64 (~10 MB raw audio, ~90s of high-quality mp3)
 
 // ─── In-memory store (ACE-Step audio) ────────────────────────────────────────
-// Map<taskId, { buffer: Buffer, expiresAt: number, error?: string }>
 
 const audioStore = new Map();
 
 function storeAudio(taskId, buffer) {
   audioStore.set(taskId, { buffer, expiresAt: Date.now() + IN_MEMORY_TTL });
-  // Auto-cleanup after TTL
   setTimeout(() => audioStore.delete(taskId), IN_MEMORY_TTL);
 }
 
@@ -57,6 +65,50 @@ function storeError(taskId, message) {
   audioStore.set(taskId, { error: message, expiresAt: Date.now() + IN_MEMORY_TTL });
   setTimeout(() => audioStore.delete(taskId), IN_MEMORY_TTL);
 }
+
+// ─── Rate limiter (per IP, daily) ────────────────────────────────────────────
+
+const rateMap = new Map(); // IP → { date: "YYYY-MM-DD", count: N }
+
+function getToday() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function getClientIP(req) {
+  return req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
+    || req.headers["x-real-ip"]
+    || req.socket.remoteAddress
+    || "unknown";
+}
+
+function checkRateLimit(ip) {
+  const today = getToday();
+  const entry = rateMap.get(ip);
+  if (!entry || entry.date !== today) {
+    rateMap.set(ip, { date: today, count: 0 });
+    return true;
+  }
+  return entry.count < DAILY_LIMIT;
+}
+
+function incrementRate(ip) {
+  const today = getToday();
+  const entry = rateMap.get(ip);
+  if (!entry || entry.date !== today) {
+    rateMap.set(ip, { date: today, count: 1 });
+  } else {
+    rateMap.set(ip, { date: today, count: entry.count + 1 });
+  }
+}
+
+// Clean rate map every hour (keep < 1000 entries)
+setInterval(() => {
+  const today = getToday();
+  for (const [ip, entry] of rateMap) {
+    if (entry.date !== today) rateMap.delete(ip);
+  }
+}, 3600000);
 
 // ─── Optional disk output (AUTO_DOWNLOAD=true only) ───────────────────────────
 
@@ -84,7 +136,15 @@ if (USE_S3) {
 async function parseBody(req) {
   return new Promise((resolve, reject) => {
     let raw = "";
-    req.on("data", c => (raw += c));
+    let total = 0;
+    req.on("data", c => {
+      total += c.length;
+      if (total > MAX_BODY_SIZE) {
+        req.destroy();
+        return reject(new Error("Payload too large — max " + (MAX_BODY_SIZE / 1024 / 1024) + " MB"));
+      }
+      raw += c;
+    });
     req.on("end", () => {
       try { resolve(JSON.parse(raw || "{}")); }
       catch (e) { reject(new Error("Invalid JSON body")); }
@@ -107,6 +167,46 @@ function jsonRes(res, status, body) {
 function isSonautoHost(trackUrl) {
   try { return new URL(trackUrl).hostname.includes("sonauto.ai"); }
   catch { return false; }
+}
+
+// ─── Audio validation ────────────────────────────────────────────────────────
+
+function validateAudioSource(payload) {
+  const m = payload.mode;
+  const needsAudio = ["remix", "repaint", "retake", "lego", "complete"].includes(m);
+  if (!needsAudio) return null;
+
+  // Check if audio messages are present
+  const msgs = payload.messages || [];
+  let hasAudio = false;
+  let audioData = null;
+
+  for (const msg of msgs) {
+    const content = msg.content;
+    if (Array.isArray(content)) {
+      for (const part of content) {
+        if (part.type === "input_audio" && part.input_audio?.data) {
+          hasAudio = true;
+          audioData = part.input_audio.data;
+        }
+      }
+    }
+  }
+
+  if (!hasAudio) return "Mode '" + m + "' requires an audio source file.";
+
+  // Check base64 size (prevent oversized audio)
+  if (audioData && audioData.length > MAX_AUDIO_BASE64) {
+    return "Audio file too large. Maximum 90 seconds of audio.";
+  }
+
+  // Check format
+  const fmt = (msgs[0]?.content?.find?.(p => p.input_audio?.format)?.input_audio?.format || "").toLowerCase();
+  if (fmt && !["mp3", "wav", "flac", "m4a", "ogg"].includes(fmt)) {
+    return "Unsupported audio format: " + fmt + ". Use MP3, WAV, or FLAC.";
+  }
+
+  return null;
 }
 
 // ─── Sonauto API call ─────────────────────────────────────────────────────────
@@ -157,7 +257,6 @@ async function acestepCall(payload, timeoutMs = 9 * 60 * 1000) {
 function extractAudioUrl(response) {
   const msg = response?.choices?.[0]?.message;
   if (!msg) throw new Error("No choices in ACE-Step response");
-  // Try both response shapes
   const audioArr = msg.audio || (msg.audio_url ? [{ audio_url: msg.audio_url }] : null);
   if (!audioArr?.length) throw new Error("No audio in ACE-Step response");
   const url = audioArr[0]?.audio_url?.url;
@@ -281,10 +380,21 @@ async function pollSonauto(taskId, mode) {
 // ─── Request handlers ─────────────────────────────────────────────────────────
 
 async function handleGenerate(req, res) {
+  const ip = getClientIP(req);
+
+  // Auth check
   if (CLIENT_API_KEY) {
     const key = req.headers["x-client-key"] || req.headers["x-api-key"];
     if (!key || key !== CLIENT_API_KEY)
       return jsonRes(res, 401, { status: "ERROR", message: "Unauthorized" });
+  }
+
+  // Rate limit check
+  if (!checkRateLimit(ip)) {
+    return jsonRes(res, 429, {
+      status: "ERROR",
+      message: "Daily limit reached (" + DAILY_LIMIT + " generations). Come back tomorrow."
+    });
   }
 
   let payload;
@@ -293,7 +403,12 @@ async function handleGenerate(req, res) {
 
   // ── ACE-Step (Default) ─────────────────────────────────────────────────────
   if (payload.engine !== "sonauto") {
+    // Validate audio source if mode requires it
+    const audioErr = validateAudioSource(payload);
+    if (audioErr) return jsonRes(res, 400, { status: "ERROR", message: audioErr });
+
     const taskId = `acestep-${Date.now()}`;
+    incrementRate(ip);
     jsonRes(res, 200, { status: "SUBMITTED", taskId });
     runAcestepGeneration(taskId, payload);
     return;
@@ -326,6 +441,7 @@ async function handleGenerate(req, res) {
     const taskId = genRes?.task_id || genRes?.id;
     if (!taskId) throw new Error("No task_id in Sonauto response");
 
+    incrementRate(ip);
     jsonRes(res, 200, { status: "SUBMITTED", taskId });
     pollSonauto(taskId, mode);
   } catch (err) {
@@ -338,13 +454,11 @@ async function handleStatus(req, res, taskId) {
   if (taskId.startsWith("acestep-")) {
     const entry = audioStore.get(taskId);
     if (!entry) {
-      // Not done yet
       return jsonRes(res, 200, { status: "PROCESSING" });
     }
     if (entry.error) {
       return jsonRes(res, 200, { status: "FAILURE", error_message: entry.error });
     }
-    // Build download URL (relative — client prepends proxy base URL)
     return jsonRes(res, 200, {
       status:     "SUCCESS",
       song_paths: [`/download/${encodeURIComponent(taskId)}`],
@@ -435,7 +549,7 @@ const server = http.createServer(async (req, res) => {
     return jsonRes(res, 200, {
       status:  "ok",
       service: "Music AI Proxy",
-      store:   audioStore.size,   // how many tasks in memory
+      store:   audioStore.size,
     });
   }
 
@@ -455,7 +569,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[proxy] Music AI Proxy · port ${PORT} · S3=${USE_S3} · disk=${AUTO_DOWNLOAD}`);
+  console.log(`[proxy] Music AI Proxy · port ${PORT} · S3=${USE_S3} · disk=${AUTO_DOWNLOAD} · dailyLimit=${DAILY_LIMIT}`);
 });
 
 // ─── Keep-alive ───────────────────────────────────────────────────────────────

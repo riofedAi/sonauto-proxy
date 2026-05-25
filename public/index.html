@@ -1,36 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantique AI · Studio</title>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 :root{
   --bg:#0a0a14;--surface:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
   --purple:#7c3aed;--purple-lt:#a78bfa;--green:#34d399;--red:#f87171;--amber:#fbbf24;
   --text:#e5e7eb;--muted:#6b7280;--mono:'DM Mono',monospace;
 }
+
 body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+
 .shell{max-width:1060px;margin:0 auto;padding:28px 20px 60px}
+
 header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+
 .logo{display:flex;align-items:center;gap:10px}
+
 .logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:18px}
+
 .logo-name{font-size:18px;font-weight:800;letter-spacing:3px}
+
 .logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:1px}
+
 .pill{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-family:var(--mono)}
+
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pdot 2s ease-in-out infinite}
-.dot.busy{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:none}
+
+.dot.busy{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pdot-busy 0.8s ease-in-out infinite}
+
 .dot.error{background:var(--red);box-shadow:none;animation:none}
+
 .dot.idle{background:var(--muted);box-shadow:none;animation:none}
 
+
 .grid{display:grid;grid-template-columns:390px 1fr;gap:16px}
+
 @media(max-width:820px){.grid{grid-template-columns:1fr}}
 
+
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px}
+
 .card-title{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
 
-.seg{display:flex;background:rgba(0,0,0,0.35);border-radius:10px;padding:3px;gap:3px}
-.seg-btn{flex:1;padding:8px 4px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;letter-spacing:.3px;white-space:nowrap}
-.seg-btn.active{background:rgba(124,58,237,0.22);color:var(--purple-lt);border:1px solid rgba(124,58,237,0.35)}
+
+/* Model picker */
+.model-picker{position:relative;margin-bottom:20px}
+.model-trigger{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .2s;user-select:none}
+.model-trigger:hover{border-color:rgba(124,58,237,0.4)}
+.model-trigger-left{display:flex;align-items:center;gap:10px}
+.model-dot{width:8px;height:8px;border-radius:50%;background:var(--purple-lt);flex-shrink:0}
+.model-name{font-size:13px;font-weight:700;color:var(--text)}
+.model-hint{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.model-chevron{font-size:10px;color:var(--muted);transition:transform .2s}
+.model-chevron.open{transform:rotate(180deg)}
+.model-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#141424;border:1px solid rgba(124,58,237,0.3);border-radius:10px;overflow:hidden;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none}
+.model-dropdown.open{display:block}
+.model-option{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,0.04)}
+.model-option:last-child{border-bottom:none}
+.model-option:hover{background:rgba(124,58,237,0.1)}
+.model-option.active{background:rgba(124,58,237,0.15)}
+.model-option-left{display:flex;align-items:center;gap:10px}
+.model-opt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.model-opt-name{font-size:12px;font-weight:700;color:var(--text)}
+.model-option.active .model-opt-name{color:var(--purple-lt)}
+.model-opt-tag{font-size:9px;color:var(--muted);font-family:var(--mono)}
+.model-check{font-size:13px;color:var(--purple-lt);opacity:0}
+.model-option.active .model-check{opacity:1}
+
+
+/* Mode tabs */
+.mode-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.mode-tab{padding:7px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.03);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;white-space:nowrap}
+.mode-tab:hover{border-color:rgba(124,58,237,0.35);color:var(--purple-lt)}
+.mode-tab.active{background:rgba(124,58,237,0.18);border-color:rgba(124,58,237,0.45);color:var(--purple-lt)}
+
+
+.mode-desc{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:16px;min-height:14px}
+
+.model-auto-hint{display:none;font-size:9px;color:var(--green);font-family:var(--mono);margin-top:4px;align-items:center;gap:4px}
+.model-auto-hint.show{display:inline-flex}
+.model-auto-hint .ah-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+
 
 .lbl{display:block;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:16px}
-.lbl:first-child,.lbl.no-top{margin-top:0}
+.lbl.nt{margin-top:0}
+
 
 input[type=text],input[type=number],select,textarea{
   width:100%;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);
@@ -40,44 +100,67 @@ input[type=text],input[type=number],select,textarea{
 input:focus,select:focus,textarea:focus{border-color:var(--purple)}
 select option{background:#1a1a2e}
 
-.model-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-.model-card{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s}
-.model-card:hover{border-color:rgba(124,58,237,0.4)}
-.model-card.active{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.45)}
-.model-card-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
-.model-card.active .model-card-name{color:var(--purple-lt)}
-.model-card-desc{font-size:10px;color:var(--muted);line-height:1.4;font-family:var(--mono)}
 
 .source-zone{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s}
 .source-zone:hover{border-color:rgba(124,58,237,0.5)}
 .source-zone input[type=file]{display:none}
-.source-zone-icon{font-size:20px;display:block;margin-bottom:4px}
-.source-zone-label{font-size:11px;color:var(--muted);display:block}
+.sz-icon{font-size:20px;display:block;margin-bottom:4px}
+.sz-lbl{font-size:11px;color:var(--muted);display:block}
+
 .source-info{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px}
 .source-info span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-meta{font-size:10px;color:var(--muted);flex-shrink:0}
+.source-info .src-rec{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.2);color:var(--red)}
+.fmeta{font-size:10px;color:var(--muted);flex-shrink:0}
 .x-btn{cursor:pointer;background:none;border:none;color:var(--green);font-size:14px;opacity:.7;flex-shrink:0}
 .x-btn:hover{opacity:1}
+
+
+/* Audio source: Upload + Record tabs */
+.src-tabs{display:flex;gap:4px;margin-bottom:6px}
+.src-tab{padding:6px 14px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:rgba(255,255,255,0.03);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif}
+.src-tab:hover{color:var(--purple-lt)}
+.src-tab.active{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.3);color:var(--purple-lt)}
+
+/* Record button */
+.rec-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;border:1px solid var(--red);background:rgba(248,113,113,0.08);color:var(--red);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.rec-btn:hover{background:rgba(248,113,113,0.15);transform:scale(1.02)}
+.rec-btn.recording{animation:recPulse 1.2s ease-in-out infinite;border-color:#ef4444}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0}
+.rec-btn .rec-dot{animation:none}
+.rec-btn.recording .rec-dot{animation:recBlink 0.6s ease-in-out infinite}
+
+.rec-timer{font-size:18px;font-weight:800;font-family:var(--mono);color:var(--red);display:none;margin-top:8px;align-items:center;gap:6px}
+.rec-timer.show{display:inline-flex}
+.rec-timer .rec-timer-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:recBlink 0.6s ease-in-out infinite}
+
+.rec-hint{font-size:10px;color:var(--muted);margin-top:4px;font-style:italic}
+
+/* Permission denied */
+.rec-zone{border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;background:rgba(0,0,0,0.2);display:none}
+.rec-zone.show{display:block}
+
 
 .toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:var(--text);cursor:pointer}
 .toggle-wrap input[type=checkbox]{width:auto;accent-color:var(--purple)}
 
-.adv-toggle{width:100%;padding:8px;border:none;background:none;color:rgba(124,58,237,.6);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:color .2s;margin-top:14px}
+
+.adv-toggle{width:100%;padding:8px;border:none;background:none;color:rgba(124,58,237,.6);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:color .2s;margin-top:12px}
 .adv-toggle:hover{color:var(--purple-lt)}
 .adv-panel{overflow:hidden;max-height:0;transition:max-height .3s ease}
-.adv-panel.open{max-height:400px;border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
+.adv-panel.open{max-height:360px;border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-.range-wrap{margin-top:6px}
-.range-wrap input[type=range]{padding:0;height:4px;border:none;border-radius:2px;background:rgba(255,255,255,0.1);accent-color:var(--purple);width:100%;margin-bottom:4px}
 .range-val{color:var(--purple-lt)}
-.range-hint{font-size:10px;color:var(--muted);font-style:italic}
+.range-hint{font-size:10px;color:var(--muted);font-style:italic;margin-top:2px}
+input[type=range]{padding:0;height:4px;border:none;border-radius:2px;background:rgba(255,255,255,0.1);accent-color:var(--purple);width:100%;margin-top:6px}
+
 
 hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+
 
 .btn-gen{width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;cursor:pointer;transition:opacity .2s,transform .15s;box-shadow:0 4px 20px rgba(124,58,237,0.25)}
 .btn-gen:hover{opacity:.9;transform:translateY(-1px)}
 .btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
 
 .right-col{display:flex;flex-direction:column;gap:16px}
 
@@ -85,10 +168,21 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .prog-wrap.on{opacity:1}
 .prog-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--green));transition:width .5s ease}
 
-.status-display{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--muted)}
-.status-icon{font-size:15px;flex-shrink:0}
 
-.tracks-list{display:flex;flex-direction:column;gap:9px}
+.status-display{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--muted)}
+.si{font-size:15px;flex-shrink:0}
+.si.generating{animation:siPulse 1.2s ease-in-out infinite}
+
+
+/* Alert banner */
+.alert{display:none;padding:10px 14px;border-radius:9px;font-size:12px;font-family:var(--mono);margin-bottom:14px;border:1px solid;line-height:1.5}
+.alert.warn{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3);color:var(--amber)}
+.alert.err{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.3);color:var(--red)}
+.alert.show{display:block}
+
+
+/* Tracks list */
+.tracks-list{display:flex;flex-direction:column;gap:9px;min-height:80px}
 .track-card{display:flex;align-items:center;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);gap:12px;animation:fadeUp .4s ease both}
 .track-badge{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#4f46e5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
 .track-info{flex:1;min-width:0}
@@ -100,21 +194,45 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .tbtn-dl{background:#16a34a;color:#fff}
 .tbtn-open{background:rgba(124,58,237,0.2);color:var(--purple-lt);border:1px solid rgba(124,58,237,0.3)!important}
 
-.skeleton{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px}
-.skel-circle{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0}
+
+/* Skeleton + Visualizer */
+.skeleton{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:14px}
+.skel-visualizer{display:flex;align-items:flex-end;gap:3px;height:30px;flex-shrink:0}
+.skel-bar{width:4px;border-radius:2px;background:linear-gradient(180deg,var(--purple-lt),var(--purple));animation:eqBounce 0.9s ease-in-out infinite}
+.skel-bar:nth-child(1){height:12px;animation-delay:0s}
+.skel-bar:nth-child(2){height:22px;animation-delay:0.15s}
+.skel-bar:nth-child(3){height:28px;animation-delay:0.3s}
+.skel-bar:nth-child(4){height:16px;animation-delay:0.45s}
+.skel-bar:nth-child(5){height:24px;animation-delay:0.6s}
 .skel-lines{flex:1}
 .skel-line{height:9px;border-radius:5px;background:rgba(255,255,255,0.08);animation:shimmer 1.4s ease-in-out infinite}
 .skel-line+.skel-line{margin-top:7px;width:50%}
+.skel-label{font-size:9px;color:var(--muted);font-family:var(--mono);text-align:center;margin-top:6px;animation:shimmer 1.4s ease-in-out infinite}
 .empty-state{text-align:center;color:var(--muted);font-size:12px;padding:28px 0}
-.mode-desc{font-size:11px;color:var(--muted);font-style:italic;margin-top:8px;margin-bottom:16px;min-height:16px}
+
+
+/* Model badge on tracks */
+.track-model-badge{font-size:9px;padding:2px 7px;border-radius:5px;font-family:var(--mono);font-weight:500;flex-shrink:0}
+.badge-turbo{background:rgba(167,139,250,0.15);color:var(--purple-lt);border:1px solid rgba(167,139,250,0.25)}
+.badge-sft{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.badge-sonauto{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%,100%{opacity:.4}50%{opacity:.9}}
 @keyframes pdot{0%,100%{box-shadow:0 0 6px var(--green)}50%{box-shadow:0 0 14px var(--green)}}
+@keyframes pdot-busy{0%,100%{box-shadow:0 0 6px var(--amber)}50%{box-shadow:0 0 14px var(--amber)}}
+@keyframes eqBounce{0%,100%{transform:scaleY(0.4);opacity:0.5}50%{transform:scaleY(1);opacity:1}}
+@keyframes siPulse{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,0.4)}50%{box-shadow:0 0 0 8px rgba(248,113,113,0)}}
+@keyframes recBlink{0%,100%{opacity:1}50%{opacity:0.2}}
+
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
 
 <div class="shell">
   <header>
@@ -122,138 +240,171 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
       <div class="logo-mark">🎵</div>
       <div>
         <div class="logo-name">CANTIQUE AI</div>
-        <div class="logo-sub">STUDIO · PROXY DASHBOARD</div>
+        <div class="logo-sub">STUDIO AI</div>
       </div>
     </div>
     <div class="pill">
       <div class="dot idle" id="dot"></div>
-      <span id="statusText">Ready</span>
+      <span id="statusText">Prêt</span>
     </div>
   </header>
 
   <div class="grid">
+    <!-- LEFT PANEL -->
     <div class="card">
       <div class="card-title">Génération musicale</div>
 
-      <span class="lbl no-top">Moteur IA</span>
-      <div class="seg" style="margin-top:6px">
-        <button class="seg-btn active" data-e="acestep" onclick="selectEngine('acestep')">⚡ ACE-Step</button>
-        <button class="seg-btn"        data-e="sonauto" onclick="selectEngine('sonauto')">🎵 Sonauto</button>
-      </div>
-
-      <div id="modelSection">
-        <span class="lbl">Famille de modèle</span>
-        <div class="model-cards">
-          <div class="model-card active" data-model="acemusic/acestep-v1.5-xl-turbo" onclick="selectModel(this)">
-            <div class="model-card-name">XL Turbo</div>
-            <div class="model-card-desc">Rapide · tous les modes</div>
+      <!-- Model picker -->
+      <span class="lbl nt">Modèle</span>
+      <div class="model-picker" style="margin-top:6px">
+        <div class="model-trigger" onclick="toggleModelDropdown()">
+          <div class="model-trigger-left">
+            <div class="model-dot" id="triggerDot"></div>
+            <div>
+              <div class="model-name" id="triggerName">XL Turbo</div>
+              <div class="model-hint" id="triggerHint">Rapide · par défaut</div>
+            </div>
           </div>
-          <div class="model-card" data-model="acemusic/acestep-v1.5-xl-sft" onclick="selectModel(this)">
-            <div class="model-card-name">XL SFT</div>
-            <div class="model-card-desc">Précis · Lego / Compléter</div>
+          <span class="model-chevron" id="mdChevron">▼</span>
+        </div>
+        <div class="model-dropdown" id="modelDropdown">
+          <div class="model-option active" data-engine="acestep" data-model="acemusic/acestep-v1.5-xl-turbo" data-name="XL Turbo" data-hint="Rapide · recommandé" data-color="#a78bfa" onclick="selectModel(this)">
+            <div class="model-option-left">
+              <div class="model-opt-dot" style="background:#a78bfa"></div>
+              <div>
+                <div class="model-opt-name">XL Turbo</div>
+                <div class="model-opt-tag">Simple, Custom, Remix, Repaint, Retake, Lego, Compléter</div>
+              </div>
+            </div>
+            <span class="model-check">✓</span>
+          </div>
+          <div class="model-option" data-engine="sonauto" data-model="sonauto" data-name="Sonauto AI" data-hint="Simple &amp; Custom uniquement" data-color="#fbbf24" onclick="selectModel(this)">
+            <div class="model-option-left">
+              <div class="model-opt-dot" style="background:#fbbf24"></div>
+              <div>
+                <div class="model-opt-name">Sonauto AI</div>
+                <div class="model-opt-tag">Simple, Custom — moteur alternatif</div>
+              </div>
+            </div>
+            <span class="model-check">✓</span>
           </div>
         </div>
       </div>
+      <div class="model-auto-hint" id="autoSftHint">
+        <span class="ah-dot"></span> mode optimisé · modèle de précision activé
+      </div>
 
+      <!-- Mode tabs -->
       <span class="lbl">Mode</span>
-      <div class="seg" style="margin-top:6px;flex-wrap:wrap;gap:4px" id="modeSegs">
-        <button class="seg-btn active" data-m="simple"   onclick="setMode('simple')">✨ Simple</button>
-        <button class="seg-btn"        data-m="custom"   onclick="setMode('custom')">✍️ Custom</button>
-        <button class="seg-btn"        data-m="remix"    onclick="setMode('remix')">🔀 Remix</button>
-        <button class="seg-btn"        data-m="repaint"  onclick="setMode('repaint')">🖌️ Repaint</button>
-        <button class="seg-btn"        data-m="retake"   onclick="setMode('retake')">🎲 Retake</button>
-        <button class="seg-btn"        data-m="lego"     onclick="setMode('lego')">🧱 Lego</button>
-        <button class="seg-btn"        data-m="complete" onclick="setMode('complete')">🎹 Compléter</button>
+      <div class="mode-tabs" id="modeTabs">
+        <button class="mode-tab active" data-m="simple"   onclick="setMode('simple')">✨ Simple</button>
+        <button class="mode-tab"        data-m="custom"   onclick="setMode('custom')">✍️ Custom</button>
+        <button class="mode-tab"        data-m="remix"    onclick="setMode('remix')">🔀 Remix</button>
+        <button class="mode-tab"        data-m="repaint"  onclick="setMode('repaint')">🖌️ Repaint</button>
+        <button class="mode-tab"        data-m="retake"   onclick="setMode('retake')">🎲 Retake</button>
+        <button class="mode-tab"        data-m="lego"     onclick="setMode('lego')">🧱 Lego</button>
+        <button class="mode-tab"        data-m="complete" onclick="setMode('complete')">🎹 Compléter</button>
       </div>
       <div class="mode-desc" id="modeDesc">L'IA gère les paroles — entrez un prompt musical</div>
 
+      <!-- Audio source -->
       <div id="sourceSection" style="display:none">
         <span class="lbl">Audio source</span>
-        <div style="margin-top:6px" id="sourceUploadZone">
+
+        <!-- Tab switcher: Upload | Record -->
+        <div class="src-tabs" id="srcTabs">
+          <button class="src-tab active" data-src="upload" onclick="switchSourceTab('upload')">📁 Importer</button>
+          <button class="src-tab"        data-src="record" onclick="switchSourceTab('record')">🎤 Enregistrer</button>
+        </div>
+
+        <!-- UPLOAD PANEL -->
+        <div id="srcPanelUpload">
           <label class="source-zone" for="fileInput">
-            <span class="source-zone-icon">🎧</span>
-            <span class="source-zone-label">Cliquer pour choisir un fichier audio</span>
-            <span class="source-zone-label" style="font-size:10px;margin-top:2px">MP3, WAV, FLAC · max 20 Mo</span>
+            <span class="sz-icon">🎧</span>
+            <span class="sz-lbl">Cliquer pour choisir un fichier audio</span>
+            <span class="sz-lbl" style="font-size:10px;margin-top:2px">MP3, WAV, FLAC · max 1 min 30 · max 20 Mo</span>
             <input type="file" id="fileInput" accept="audio/mpeg,audio/wav,audio/flac,audio/x-flac,audio/mp3" onchange="handleFile(this)">
           </label>
         </div>
+
+        <!-- RECORD PANEL -->
+        <div id="srcPanelRecord" style="display:none">
+          <div class="rec-zone show" id="recZone">
+            <button class="rec-btn" id="recBtn" onclick="toggleRecording()">
+              <div class="rec-dot"></div> Démarrer l'enregistrement
+            </button>
+            <div class="rec-hint">10s minimum · 90s maximum</div>
+            <div class="rec-timer" id="recTimer">
+              <span class="rec-timer-dot"></span>
+              <span id="recTime">00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info badge (shared for both upload and record) -->
         <div class="source-info" id="sourceInfo" style="display:none">
           <span id="sourceName"></span>
-          <span class="file-meta" id="fileMeta"></span>
+          <span class="fmeta" id="fileMeta"></span>
           <button class="x-btn" onclick="clearSource()">✕</button>
         </div>
       </div>
 
+      <!-- Prompt -->
       <div id="fieldPrompt">
         <span class="lbl" id="promptLabel">Description musicale</span>
         <textarea id="prompt" rows="3" placeholder="Ex: gospel afro-pop, piano et cordes, voix féminine émotive…" style="margin-top:6px">Gospel afro-pop, piano et cordes, voix féminine émotive, tempo modéré</textarea>
       </div>
 
+      <!-- Lyrics -->
       <div id="fieldLyrics" style="display:none">
         <span class="lbl">Paroles</span>
         <textarea id="lyrics" rows="5" placeholder="[Verse 1]&#10;Vos paroles…&#10;&#10;[Chorus]&#10;…" style="margin-top:6px"></textarea>
       </div>
 
+      <!-- Style -->
       <div style="margin-top:16px">
-        <span class="lbl">Style / Tags</span>
+        <span class="lbl">Styles</span>
         <input type="text" id="tags" value="worship, gospel, emotional, afro-pop" style="margin-top:6px">
       </div>
 
-      <div style="margin-top:16px">
+      <!-- Title -->
+      <div style="margin-top:14px">
         <span class="lbl">Titre <span style="color:var(--muted);font-size:9px;text-transform:none;letter-spacing:0;font-weight:400">(optionnel — auto si vide)</span></span>
-        <input type="text" id="titleField" placeholder="Laissez vide pour auto-générer" style="margin-top:6px">
+        <input type="text" id="titleField" placeholder="Song Title (Optional)" style="margin-top:6px">
       </div>
 
+      <!-- Instrumental toggle -->
       <div id="fieldInstrumental" style="display:none">
         <label class="toggle-wrap">
           <input type="checkbox" id="instrumental"> Instrumental (sans voix)
         </label>
       </div>
 
-      <button class="adv-toggle" id="advToggle" onclick="toggleAdv()">▼ Paramètres avancés</button>
+      <!-- Advanced -->
+      <button class="adv-toggle" id="advToggle" onclick="toggleAdv()">▼ More Options</button>
       <div class="adv-panel" id="advPanel">
         <div class="field-row">
-          <div>
-            <span class="lbl no-top">BPM</span>
-            <input type="number" id="bpm" placeholder="Auto" min="40" max="220" style="margin-top:6px">
-          </div>
-          <div>
-            <span class="lbl no-top">Durée (s)</span>
-            <input type="number" id="duration" value="60" min="10" max="240" style="margin-top:6px">
-          </div>
+          <div><span class="lbl nt">BPM</span><input type="number" id="bpm" placeholder="Auto" min="40" max="220" style="margin-top:6px"></div>
+          <div><span class="lbl nt">Durée (s)</span><input type="number" id="duration" value="60" min="10" max="240" style="margin-top:6px"></div>
         </div>
-
         <div id="advRemix" style="display:none;margin-top:14px">
-          <span class="lbl no-top">Influence structure — <span class="range-val" id="strengthVal">0.65</span></span>
-          <div class="range-wrap">
-            <input type="range" id="coverStrength" min="0" max="1" step="0.05" value="0.65" oninput="document.getElementById('strengthVal').textContent=parseFloat(this.value).toFixed(2)">
-            <div class="range-hint">0 = style libre · 1 = suit la structure source</div>
-          </div>
+          <span class="lbl nt">Influence structure — <span class="range-val" id="strengthVal">0.65</span></span>
+          <input type="range" id="coverStrength" min="0" max="1" step="0.05" value="0.65" oninput="document.getElementById('strengthVal').textContent=parseFloat(this.value).toFixed(2)">
+          <div class="range-hint">0 = style libre · 1 = suit la structure source</div>
         </div>
-
         <div id="advRepaint" style="display:none">
           <div class="field-row" style="margin-top:14px">
-            <div>
-              <span class="lbl no-top">Début (s)</span>
-              <input type="number" id="repaintStart" value="0" style="margin-top:6px">
-            </div>
-            <div>
-              <span class="lbl no-top">Fin (s)</span>
-              <input type="number" id="repaintEnd" value="20" style="margin-top:6px">
-            </div>
+            <div><span class="lbl nt">Début (s)</span><input type="number" id="repaintStart" value="0" style="margin-top:6px"></div>
+            <div><span class="lbl nt">Fin (s)</span><input type="number" id="repaintEnd" value="20" style="margin-top:6px"></div>
           </div>
         </div>
-
         <div id="advRetake" style="display:none;margin-top:14px">
-          <span class="lbl no-top">Variance — <span class="range-val" id="varianceVal">0.30</span></span>
-          <div class="range-wrap">
-            <input type="range" id="retakeVariance" min="0" max="1" step="0.05" value="0.3" oninput="document.getElementById('varianceVal').textContent=parseFloat(this.value).toFixed(2)">
-            <div class="range-hint">0.0 = quasi identique · 1.0 = très différent</div>
-          </div>
+          <span class="lbl nt">Variance — <span class="range-val" id="varianceVal">0.30</span></span>
+          <input type="range" id="retakeVariance" min="0" max="1" step="0.05" value="0.3" oninput="document.getElementById('varianceVal').textContent=parseFloat(this.value).toFixed(2)">
+          <div class="range-hint">0.0 = quasi identique · 1.0 = très différent</div>
         </div>
-
         <div style="margin-top:14px">
-          <span class="lbl no-top">Langue vocale</span>
+          <span class="lbl nt">Langue vocale</span>
           <select id="vocalLang" style="margin-top:6px">
             <option value="fr">Français</option>
             <option value="en">English</option>
@@ -267,12 +418,14 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
       <button class="btn-gen" id="btnGen" onclick="handleGenerate()">✦ Générer</button>
     </div>
 
+    <!-- RIGHT PANEL -->
     <div class="right-col">
       <div class="card">
         <div class="card-title">Statut</div>
+        <div class="alert" id="alertBanner"></div>
         <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
         <div class="status-display">
-          <span class="status-icon" id="statusIcon">◇</span>
+          <span class="si" id="statusIcon">◇</span>
           <span id="statusMsg">Studio prêt · en attente</span>
         </div>
       </div>
@@ -280,7 +433,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div class="card-title" style="margin-bottom:0">Pistes générées</div>
-          <button style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#7c3aed';this.style.color='#a78bfa'" onmouseout="this.style.borderColor='';this.style.color=''" onclick="clearAll()">Effacer tout</button>
+          <button style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s" onmouseover="this.style.color='#a78bfa';this.style.borderColor='#7c3aed'" onmouseout="this.style.color='';this.style.borderColor=''" onclick="clearAll()">Effacer tout</button>
         </div>
         <div id="tracksList" class="tracks-list">
           <div class="empty-state">Aucune piste — lancez une génération ✦</div>
@@ -292,11 +445,12 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
 <script>
 const MAX_FILE_MB = 20;
+const MAX_AUDIO_SEC = 90;                 // 1 min 30 max
+const MIN_RECORD_SEC = 10;                // 10s minimum pour enregistrement
+const DAILY_LIMIT = 8;
+const STORAGE_KEY = 'cantique_daily';
 
-const MODELS_ACESTEP = [
-  { id:'acemusic/acestep-v1.5-xl-turbo', name:'XL Turbo', desc:'Rapide · tous les modes' },
-  { id:'acemusic/acestep-v1.5-xl-sft',   name:'XL SFT',   desc:'Précis · Lego / Compléter' },
-];
+// ── Mode config ────────────────────────────────────────────────────────────
 
 const MODES = {
   simple:   { desc:"L'IA gère les paroles — entrez un prompt musical", audio:false, prompt:true,  lyrics:false, instr:false },
@@ -308,43 +462,287 @@ const MODES = {
   complete: { desc:"Générer un accompagnement pour une voix",           audio:true,  prompt:true,  lyrics:false, instr:false }
 };
 
+const SONAUTO_HIDDEN = ['remix','repaint','retake','lego','complete'];
+const SFT_MODES = ['remix','repaint','lego','complete'];
+
 const PROMPT_LABELS = {
   remix:'Nouveau style souhaité', repaint:'Style de la section',
   lego:'Instrument à ajouter',   complete:"Style d'accompagnement"
 };
 
+// ── State ──────────────────────────────────────────────────────────────────
+
 const S = {
-  engine: 'acestep',
-  model:  'acemusic/acestep-v1.5-xl-turbo',
-  mode:   'simple',
-  b64:    null,
-  fname:  null,
-  polling: false,
-  currentTaskId: null
+  engine:       'acestep',
+  displayModel: 'acemusic/acestep-v1.5-xl-turbo',
+  actualModel:  'acemusic/acestep-v1.5-xl-turbo',
+  mode:         'simple',
+  b64:          null,
+  fname:        null,
+  polling:      false,
+  srcTab:       'upload'       // 'upload' | 'record'
 };
 
-function selectEngine(e) {
-  S.engine = e;
-  document.querySelectorAll('[data-e]').forEach(b => b.classList.toggle('active', b.dataset.e === e));
-  document.getElementById('modelSection').style.display = e === 'acestep' ? 'block' : 'none';
-  const isSonauto = e === 'sonauto';
-  document.querySelectorAll('#modeSegs .seg-btn').forEach(b => {
-    b.style.display = (isSonauto && MODES[b.dataset.m]?.audio) ? 'none' : '';
+// ── Recording state ────────────────────────────────────────────────────────
+
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordStartTime = 0;
+let recordTimerInterval = null;
+let recordStream = null;
+
+// ── Daily limit ────────────────────────────────────────────────────────────
+
+function getTodayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function getDailyData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { date: getTodayKey(), count: 0 };
+    return JSON.parse(raw);
+  } catch { return { date: getTodayKey(), count: 0 }; }
+}
+
+function saveDailyData(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function checkDailyLimit() {
+  const data = getDailyData();
+  const today = getTodayKey();
+  if (data.date !== today) { saveDailyData({ date: today, count: 0 }); return true; }
+  return data.count < DAILY_LIMIT;
+}
+
+function incrementDailyCount() {
+  const data = getDailyData();
+  const today = getTodayKey();
+  if (data.date !== today) { saveDailyData({ date: today, count: 1 }); }
+  else { saveDailyData({ date: today, count: data.count + 1 }); }
+}
+
+// ── Source tab switching ───────────────────────────────────────────────────
+
+function switchSourceTab(tab) {
+  S.srcTab = tab;
+  document.querySelectorAll('.src-tab').forEach(b => b.classList.toggle('active', b.dataset.src === tab));
+  document.getElementById('srcPanelUpload').style.display = tab === 'upload' ? 'block' : 'none';
+  document.getElementById('srcPanelRecord').style.display = tab === 'record' ? 'block' : 'none';
+}
+
+// ── Recording ──────────────────────────────────────────────────────────────
+
+async function toggleRecording() {
+  const btn = document.getElementById('recBtn');
+
+  // STOP recording
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    stopRecordingUI();
+    return;
+  }
+
+  // START recording — request permission
+  try {
+    recordStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : 'audio/webm';
+
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(recordStream, { mimeType, audioBitsPerSecond: 128000 });
+
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: mimeType });
+      const durSec = (Date.now() - recordStartTime) / 1000;
+
+      // Release mic
+      if (recordStream) { recordStream.getTracks().forEach(t => t.stop()); recordStream = null; }
+
+      if (durSec < MIN_RECORD_SEC) {
+        showAlert('⏱️ Enregistrement trop court (' + Math.round(durSec) + 's). Minimum : ' + MIN_RECORD_SEC + 's.', 'err');
+        return;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = e => {
+        S.b64 = e.target.result.split(',')[1];
+        S.fname = 'enregistrement_' + Math.round(durSec) + 's.webm';
+        document.getElementById('sourceName').textContent = '🎤 ' + S.fname;
+        document.getElementById('fileMeta').textContent = (blob.size / 1024 / 1024).toFixed(1) + ' Mo · ' + Math.floor(durSec) + 's';
+        document.getElementById('sourceInfo').style.display = 'flex';
+      };
+      reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+    recordStartTime = Date.now();
+    startRecordingUI(btn);
+
+  } catch (err) {
+    showAlert('🎤 Accès au micro refusé. Vérifiez les permissions de votre navigateur.', 'err');
+  }
+}
+
+function startRecordingUI(btn) {
+  btn.textContent = ''; btn.innerHTML = '<div class="rec-dot"></div> Arrêter l\'enregistrement';
+  btn.classList.add('recording');
+  document.getElementById('recTimer').classList.add('show');
+  updateRecTimer();
+  recordTimerInterval = setInterval(updateRecTimer, 200);
+
+  // Auto-stop at 90s
+  recordTimerInterval._autoStop = setTimeout(() => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      stopRecordingUI();
+    }
+  }, MAX_AUDIO_SEC * 1000);
+}
+
+function stopRecordingUI() {
+  const btn = document.getElementById('recBtn');
+  btn.innerHTML = '<div class="rec-dot"></div> Démarrer l\'enregistrement';
+  btn.classList.remove('recording');
+  document.getElementById('recTimer').classList.remove('show');
+  clearInterval(recordTimerInterval);
+  clearTimeout(recordTimerInterval._autoStop);
+  updateRecTimer(true);
+}
+
+function updateRecTimer(reset) {
+  if (reset) { document.getElementById('recTime').textContent = '00:00'; return; }
+  const elapsed = (Date.now() - recordStartTime) / 1000;
+  const m = Math.floor(elapsed / 60);
+  const s = Math.floor(elapsed % 60);
+  document.getElementById('recTime').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+// ── Audio validation for uploaded files ────────────────────────────────────
+
+async function validateAudioDuration(file) {
+  return new Promise((resolve, reject) => {
+    const ext = (file.name || '').split('.').pop().toLowerCase();
+    if (!['mp3','wav','flac','m4a','ogg','aac','wma','webm'].includes(ext)) {
+      return reject(new Error('Format de fichier non audio détecté.'));
+    }
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        const arrayBuffer = e.target.result;
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        ctx.close();
+        const dur = audioBuffer.duration;
+        if (dur > MAX_AUDIO_SEC) {
+          reject(new Error('Audio trop long (' + Math.round(dur) + 's). Maximum : ' + MAX_AUDIO_SEC + 's (1 min 30).'));
+        } else {
+          resolve(dur);
+        }
+      } catch (decodeErr) {
+        ctx.close();
+        reject(new Error('Fichier audio corrompu ou non reconnu.'));
+      }
+    };
+
+    reader.onerror = () => { ctx.close(); reject(new Error('Impossible de lire le fichier.')); };
+    reader.readAsArrayBuffer(file.slice(0, 15 * 1024 * 1024));
   });
-  if (isSonauto && MODES[S.mode]?.audio) setMode('simple');
-  else updateUI();
+}
+
+// ── Model dropdown ─────────────────────────────────────────────────────────
+
+function toggleModelDropdown() {
+  const dd = document.getElementById('modelDropdown');
+  const ch = document.getElementById('mdChevron');
+  const open = dd.classList.toggle('open');
+  ch.classList.toggle('open', open);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.model-picker')) {
+    document.getElementById('modelDropdown').classList.remove('open');
+    document.getElementById('mdChevron').classList.remove('open');
+  }
+});
+
+function findModelOption(modelId) {
+  return document.querySelector('.model-option[data-model="' + modelId + '"]');
 }
 
 function selectModel(el) {
-  document.querySelectorAll('.model-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.model-option').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
-  S.model = el.dataset.model;
+  S.engine       = el.dataset.engine;
+  S.displayModel = el.dataset.model;
+  S.actualModel  = resolveActualModel();
+  updatePickerUI(el.dataset.name, el.dataset.hint, el.dataset.color);
+  document.getElementById('modelDropdown').classList.remove('open');
+  document.getElementById('mdChevron').classList.remove('open');
+
+  const isSonauto = S.engine === 'sonauto';
+  document.querySelectorAll('.mode-tab').forEach(b => {
+    b.style.display = (isSonauto && SONAUTO_HIDDEN.includes(b.dataset.m)) ? 'none' : '';
+  });
+  if (isSonauto && SONAUTO_HIDDEN.includes(S.mode)) setMode('simple');
+  else updateUI();
+
+  updateSftHint();
+  hideAlert();
 }
+
+function updatePickerUI(name, hint, color) {
+  document.getElementById('triggerName').textContent = name;
+  document.getElementById('triggerHint').textContent = hint;
+  document.getElementById('triggerDot').style.background = color;
+}
+
+function resolveActualModel() {
+  if (S.engine === 'sonauto') return 'sonauto';
+  if (SFT_MODES.includes(S.mode)) return 'acemusic/acestep-v1.5-xl-sft';
+  return S.displayModel;
+}
+
+function updateSftHint() {
+  const hint = document.getElementById('autoSftHint');
+  const isSft = S.actualModel === 'acemusic/acestep-v1.5-xl-sft';
+  hint.classList.toggle('show', isSft);
+}
+
+function fallbackToXLTurbo() {
+  showAlert('⚠️ Sonauto AI est occupé en ce moment. Passage automatique à XL Turbo.', 'warn');
+  const opt = findModelOption('acemusic/acestep-v1.5-xl-turbo');
+  if (opt) {
+    document.querySelectorAll('.model-option').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    S.engine       = 'acestep';
+    S.displayModel = 'acemusic/acestep-v1.5-xl-turbo';
+    S.actualModel  = resolveActualModel();
+    updatePickerUI(opt.dataset.name, opt.dataset.hint, opt.dataset.color);
+    document.querySelectorAll('.mode-tab').forEach(b => { b.style.display = ''; });
+    updateUI();
+    updateSftHint();
+  }
+}
+
+// ── Mode ───────────────────────────────────────────────────────────────────
 
 function setMode(m) {
   S.mode = m;
-  document.querySelectorAll('#modeSegs .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.m === m));
   document.getElementById('modeDesc').textContent = MODES[m]?.desc || '';
+  S.actualModel = resolveActualModel();
+  updateSftHint();
   updateUI();
 }
 
@@ -363,46 +761,74 @@ function updateUI() {
 function toggleAdv() {
   const p = document.getElementById('advPanel');
   const open = p.classList.toggle('open');
-  document.getElementById('advToggle').textContent = (open ? '▲' : '▼') + ' Paramètres avancés';
+  document.getElementById('advToggle').textContent = (open ? '▲' : '▼') + ' More Options';
 }
 
-function handleFile(input) {
+// ── File upload ────────────────────────────────────────────────────────────
+
+async function handleFile(input) {
   const file = input.files[0]; if (!file) return;
+
   const mb = file.size / 1024 / 1024;
   if (mb > MAX_FILE_MB) {
-    alert('Fichier trop volumineux (' + mb.toFixed(1) + ' Mo). Limite : ' + MAX_FILE_MB + ' Mo.');
+    showAlert('Fichier trop volumineux (' + mb.toFixed(1) + ' Mo). Limite : ' + MAX_FILE_MB + ' Mo.', 'err');
     input.value = ''; return;
   }
-  const allowed = ['audio/mpeg','audio/mp3','audio/wav','audio/flac','audio/x-flac'];
-  if (!allowed.includes(file.type) && !file.name.match(/\.(mp3|wav|flac)$/i)) {
-    alert('Format non supporté. Utilisez MP3, WAV ou FLAC.');
+
+  const allowed = ['audio/mpeg','audio/mp3','audio/wav','audio/flac','audio/x-flac','audio/ogg','audio/aac','audio/x-m4a','audio/webm'];
+  const extOk = file.name.match(/\.(mp3|wav|flac|m4a|ogg|aac|webm)$/i);
+  if (!allowed.includes(file.type) && !extOk) {
+    showAlert('Format non supporté. Utilisez MP3, WAV ou FLAC.', 'err');
     input.value = ''; return;
   }
-  const r = new FileReader();
-  r.onload = e => {
-    S.b64 = e.target.result.split(',')[1];
-    S.fname = file.name;
-    document.getElementById('sourceName').textContent = file.name;
-    document.getElementById('fileMeta').textContent = mb.toFixed(1) + ' Mo';
-    document.getElementById('sourceInfo').style.display = 'flex';
-    document.getElementById('sourceUploadZone').style.display = 'none';
-    setStatusMsg('Audio chargé : ' + file.name, '✓');
-  };
-  r.readAsDataURL(file);
+
+  showAlert('🔍 Analyse du fichier audio…', 'warn');
+
+  try {
+    const durSec = await validateAudioDuration(file);
+    hideAlert();
+
+    const r = new FileReader();
+    r.onload = e => {
+      S.b64 = e.target.result.split(',')[1]; S.fname = file.name;
+      document.getElementById('sourceName').textContent = file.name;
+      document.getElementById('fileMeta').textContent = mb.toFixed(1) + ' Mo · ' + Math.floor(durSec) + 's';
+      document.getElementById('sourceInfo').style.display = 'flex';
+    };
+    r.readAsDataURL(file);
+  } catch (err) {
+    showAlert('❌ ' + err.message, 'err');
+    input.value = '';
+  }
 }
 
 function clearSource() {
   S.b64 = null; S.fname = null;
+  // Stop any ongoing recording
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    stopRecordingUI();
+  }
   document.getElementById('sourceInfo').style.display = 'none';
-  document.getElementById('sourceUploadZone').style.display = 'block';
+  document.getElementById('srcPanelUpload').style.display = S.srcTab === 'upload' ? 'block' : 'none';
+  document.getElementById('srcPanelRecord').style.display = S.srcTab === 'record' ? 'block' : 'none';
   document.getElementById('fileInput').value = '';
-  setStatusMsg('Source audio retirée', '◇');
 }
+
+// ── Alert banner ───────────────────────────────────────────────────────────
+
+function showAlert(msg, type='warn') {
+  const el = document.getElementById('alertBanner');
+  el.textContent = msg; el.className = 'alert ' + type + ' show';
+}
+
+function hideAlert() { document.getElementById('alertBanner').className = 'alert'; }
+
+// ── Payload ────────────────────────────────────────────────────────────────
 
 function buildPayload() {
   const m = MODES[S.mode];
-  if (m.audio && !S.b64) { alert('⚠️ Ce mode nécessite un fichier audio source.'); return null; }
-
+  if (m.audio && !S.b64) { showAlert('⚠️ Ce mode nécessite un fichier audio source (importez ou enregistrez).', 'err'); return null; }
   const tags   = document.getElementById('tags').value.split(',').map(s => s.trim()).filter(Boolean);
   const bpm    = parseInt(document.getElementById('bpm').value) || undefined;
   const dur    = parseFloat(document.getElementById('duration').value) || 60;
@@ -420,8 +846,10 @@ function buildPayload() {
       title: title || undefined };
   }
 
-  const audio = S.b64 ? [{ type:'input_audio', input_audio:{ data:S.b64, format: S.fname?.match(/\.wav$/i) ? 'wav' : 'mp3' }}] : [];
-  const base  = { engine:'acestep', model: S.model, duration:dur, vocal_language:lang, instrumental:instr, thinking:true };
+  // Determine format from filename (recordings are .webm)
+  const fmt = S.fname?.match(/\.wav$/i) ? 'wav' : (S.fname?.match(/\.webm$/i) ? 'webm' : 'mp3');
+  const audio = S.b64 ? [{ type:'input_audio', input_audio:{ data:S.b64, format: fmt }}] : [];
+  const base  = { engine:'acestep', model: S.actualModel, duration:dur, vocal_language:lang, instrumental:instr, thinking:true };
   if (bpm) base.bpm = bpm;
 
   let content = '';
@@ -447,38 +875,57 @@ function buildPayload() {
   }
 }
 
-function setStatusMsg(msg, icon) {
+// ── Status helpers ─────────────────────────────────────────────────────────
+
+function setStatusMsg(msg, icon, generating) {
   document.getElementById('statusMsg').textContent = msg;
-  if (icon) document.getElementById('statusIcon').textContent = icon;
+  const si = document.getElementById('statusIcon');
+  if (icon) si.textContent = icon;
+  si.classList.toggle('generating', !!generating);
 }
+
 function setDot(type) { document.getElementById('dot').className = 'dot' + (type ? ' ' + type : ''); }
+
 function setProgress(pct, show=true) {
   document.getElementById('progWrap').classList.toggle('on', show);
   document.getElementById('progBar').style.width = Math.round(pct) + '%';
 }
 
+// ── Generate ───────────────────────────────────────────────────────────────
+
 async function handleGenerate() {
+  if (!checkDailyLimit()) {
+    showAlert('🚫 Vous avez atteint la limite de ' + DAILY_LIMIT + ' morceaux aujourd\'hui. Revenez demain !', 'err');
+    setStatusMsg('Limite journalière atteinte', '🔒');
+    return;
+  }
+
   const payload = buildPayload(); if (!payload) return;
   const btn = document.getElementById('btnGen');
   btn.disabled = true; btn.textContent = '⏳ Génération…';
-  setDot('busy'); setProgress(5); showSkeletons();
-  setStatusMsg('Envoi de la requête…', '↑');
+  setDot('busy'); setProgress(5); showSkeletons(); hideAlert();
+  setStatusMsg('Envoi de la requête…', '↑', true);
   try {
     const r = await fetch('/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
     const d = await r.json();
     if (d.status === 'SUBMITTED' && d.taskId) {
-      S.currentTaskId = d.taskId;
+      incrementDailyCount();
       setProgress(12);
-      setStatusMsg('Tâche soumise · en cours…', '🔄');
-      pollTask(d.taskId);
+      setStatusMsg('Génération en cours…', '🔄', true);
+      pollTask(d.taskId, payload.engine);
     } else throw new Error(d.message || 'Réponse inattendue');
   } catch(err) {
-    setStatusMsg('Erreur : ' + err.message, '✕');
+    const isSonauto = payload.engine === 'sonauto';
+    if (isSonauto) { fallbackToXLTurbo(); }
+    else { showAlert('Erreur : ' + err.message, 'err'); }
+    setStatusMsg('Échec — voir l\'alerte ci-dessus', '✕');
     setDot('error'); setProgress(0, false); clearSkeletons(); resetBtn();
   }
 }
 
-async function pollTask(taskId, max=120) {
+// ── Poll ───────────────────────────────────────────────────────────────────
+
+async function pollTask(taskId, engine, max=120) {
   S.polling = true; let n = 0, pct = 12;
   const MAP = { PROCESSING:'Traitement…', GENERATING:'Génération audio…', WAITING:'En attente…', IN_PROGRESS:'En cours…', DECOMPRESSING:'Finalisation…' };
   const tick = async () => {
@@ -489,18 +936,20 @@ async function pollTask(taskId, max=120) {
       const st = (d.status || '').toUpperCase();
       if (st === 'SUCCESS') {
         setProgress(100); setDot('');
-        setStatusMsg((d.song_paths||[]).length + ' piste(s) générée(s) avec succès', '✓');
+        setStatusMsg((d.song_paths||[]).length + ' piste(s) générée(s) !', '✓');
         showTracks(d.song_paths||[], taskId); S.polling = false; resetBtn(); return;
       }
       if (st === 'FAILURE') {
-        setStatusMsg('Échec : ' + (d.error_message||'inconnu'), '✕');
+        if (engine === 'sonauto') { fallbackToXLTurbo(); setStatusMsg('Sonauto indisponible — XL Turbo activé', '⚠'); }
+        else { showAlert('Génération échouée : ' + (d.error_message||'erreur inconnue'), 'err'); setStatusMsg('Échec', '✕'); }
         setDot('error'); setProgress(0, false); clearSkeletons(); S.polling = false; resetBtn(); return;
       }
       pct = Math.min(90, pct + (n < 20 ? 3 : 1));
       setProgress(pct);
-      setStatusMsg(MAP[st] || 'En cours…', '🔄');
+      setStatusMsg(MAP[st] || 'En cours…', '🔄', true);
+      updateSkeletonLabel(Math.round(pct) + '%');
       if (n < max) setTimeout(tick, 4000);
-      else { setStatusMsg('Timeout — veuillez réessayer', '⚠'); setDot('error'); clearSkeletons(); resetBtn(); S.polling = false; }
+      else { showAlert('Délai dépassé — veuillez réessayer.', 'warn'); setDot('error'); clearSkeletons(); resetBtn(); S.polling = false; }
     } catch(err) {
       if (n < max) setTimeout(tick, 4000);
       else { clearSkeletons(); resetBtn(); S.polling = false; }
@@ -509,33 +958,64 @@ async function pollTask(taskId, max=120) {
   tick();
 }
 
+// ── Tracks ─────────────────────────────────────────────────────────────────
+
+function modelBadgeClass() {
+  if (S.engine === 'sonauto') return 'badge-sonauto';
+  if (S.actualModel && S.actualModel.includes('sft')) return 'badge-sft';
+  return 'badge-turbo';
+}
+
+function modelShortName() {
+  if (S.engine === 'sonauto') return 'Sonauto';
+  if (S.actualModel && S.actualModel.includes('sft')) return 'XL SFT';
+  return 'XL Turbo';
+}
+
 function showTracks(paths, taskId) {
   clearSkeletons();
   const list = document.getElementById('tracksList');
   if (!paths.length) { list.innerHTML = '<div class="empty-state">Aucune piste retournée</div>'; return; }
-  const prefix = taskId?.startsWith('sonauto-') ? 'Sonauto' : 'ACE-Step';
+  const prefix = modelShortName();
+  const badgeCls = modelBadgeClass();
   list.innerHTML = '';
   paths.forEach((u, i) => {
     const abs = u.startsWith('/') ? window.location.origin + u : u;
     const el = document.createElement('div');
     el.className = 'track-card'; el.style.animationDelay = (i * .06) + 's';
-    el.innerHTML = '<div class="track-badge">' + (i+1) + '</div><div class="track-info"><div class="track-name">' + prefix + ' · Piste ' + (i+1) + '</div><div class="track-url">' + u + '</div></div><div class="track-actions"><a class="tbtn tbtn-dl" href="' + abs + '" download="piste_' + (i+1) + '.mp3">⬇ DL</a><a class="tbtn tbtn-open" href="' + abs + '" target="_blank">▶ Ouvrir</a></div>';
+    el.innerHTML = '<div class="track-badge">'+(i+1)+'</div><div class="track-info"><div class="track-name">'+prefix+' · Piste '+(i+1)+' <span class="track-model-badge '+badgeCls+'">'+prefix+'</span></div><div class="track-url">'+u+'</div></div><div class="track-actions"><a class="tbtn tbtn-dl" href="'+abs+'" download="piste_'+(i+1)+'.mp3">⬇ DL</a><a class="tbtn tbtn-open" href="'+abs+'" target="_blank">▶ Ouvrir</a></div>';
     list.appendChild(el);
   });
 }
 
+// ── Skeleton ───────────────────────────────────────────────────────────────
+
 function showSkeletons() {
-  document.getElementById('tracksList').innerHTML = [1,2].map(()=>'<div class="skeleton"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line"></div></div></div>').join('');
+  document.getElementById('tracksList').innerHTML =
+    '<div class="skeleton"><div class="skel-visualizer"><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line"></div></div></div>' +
+    '<div class="skel-label" id="skelLabel">Génération en cours…</div>' +
+    '<div class="skeleton"><div class="skel-visualizer"><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line"></div></div></div>';
 }
+
+function updateSkeletonLabel(text) {
+  const lbl = document.getElementById('skelLabel');
+  if (lbl) lbl.textContent = 'Génération en cours… ' + text;
+}
+
 function clearSkeletons() {
   const l = document.getElementById('tracksList');
   if (l.querySelector('.skeleton')) l.innerHTML = '<div class="empty-state">Aucune piste — lancez une génération ✦</div>';
 }
+
 function clearAll() {
   S.polling = false; clearSkeletons(); setProgress(0, false);
-  setDot('idle'); setStatusMsg('Studio prêt · en attente', '◇'); resetBtn();
+  setDot('idle'); setStatusMsg('Studio prêt · en attente', '◇'); hideAlert(); resetBtn();
 }
+
 function resetBtn() { const b = document.getElementById('btnGen'); b.disabled = false; b.textContent = '✦ Générer'; }
 
-updateUI(); setDot('idle');
+updateUI(); setDot('idle'); updateSftHint();
 </script>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a01704c79c911525',t:'MTc3OTczODA5Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

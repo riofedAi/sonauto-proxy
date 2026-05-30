@@ -1,0 +1,14 @@
+// Ajouté : nouvelle route pour les styles Sonauto
+const STYLES_PATH = path.join(__dirname, "sonauto_tags_v3.txt");
+
+// ... (placer ceci juste avant le 'jsonRes(res, 404, ...' du HTTP server)
+if (pathname === "/styles" && req.method === "GET") {
+  if (fs.existsSync(STYLES_PATH)) {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    return res.end(fs.readFileSync(STYLES_PATH, "utf-8"));
+  } else {
+    return jsonRes(res, 404, { status: "ERROR", message: "Styles file not found" });
+  }
+}
+
+// ...le reste du code de ton serveur

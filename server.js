@@ -418,23 +418,26 @@ async function handleGenerate(req, res) {
   try {
     if (!SONAUTO_API_KEY) throw new Error("Missing EXPO_PUBLIC_SONAUTO_API_KEY on server");
     const { mode, prompt, lyrics, tags, instrumental, num_songs } = payload;
+    const prompt_strength = payload.prompt_strength ?? 1.0;
+    const balance_strength = payload.balance_strength ?? 0.8;
+    const style_scale = payload.style_scale ?? 3.0;
     if (!mode) throw new Error("mode required: simple|custom|instrumental");
 
     let body;
     if (mode === "instrumental") {
       body = { prompt: prompt || "A calm instrumental", instrumental: true,
                num_songs: num_songs || 2, output_format: "mp3",
-               prompt_strength: 2.5, balance_strength: 0.8, seed: 2025 };
+               prompt_strength, balance_strength, style_scale, seed: 2025 };
     } else if (mode === "custom") {
       if (!lyrics) throw new Error("lyrics required for custom mode");
       body = { lyrics, tags: tags || ["pop", "emotional"], instrumental: false,
                num_songs: num_songs || 2, output_format: "mp3",
-               prompt_strength: 2.5, balance_strength: 0.8, seed: 2025 };
+               prompt_strength, balance_strength, style_scale, seed: 2025 };
     } else {
       if (!prompt) throw new Error("prompt required for simple mode");
       body = { prompt, tags: tags || ["pop", "emotional"], instrumental: !!instrumental,
                num_songs: num_songs || 2, output_format: "mp3",
-               prompt_strength: 2.5, balance_strength: 0.8, seed: 2025 };
+               prompt_strength, balance_strength, style_scale, seed: 2025 };
     }
 
     const genRes = await sonautoCall("/generations/v3", "POST", body);
@@ -480,7 +483,7 @@ async function handleDownloadById(res, taskId) {
   if (entry?.buffer) {
     res.writeHead(200, {
       "Content-Type":        "audio/mpeg",
-      "Content-Disposition": `attachment; filename="${taskId}.mp3"`,
+      "Content-Disposition": `attachment; filename=\"${taskId}.mp3\"`,
       "Content-Length":      entry.buffer.length,
     });
     return res.end(entry.buffer);
@@ -495,7 +498,7 @@ async function handleDownloadById(res, taskId) {
       }).promise();
       res.writeHead(200, {
         "Content-Type":        "audio/mpeg",
-        "Content-Disposition": `attachment; filename="${taskId}.mp3"`,
+        "Content-Disposition": `attachment; filename=\"${taskId}.mp3\"`,
       });
       return res.end(obj.Body);
     } catch { /* fall through */ }
@@ -507,7 +510,7 @@ async function handleDownloadById(res, taskId) {
     if (fs.existsSync(filePath)) {
       res.writeHead(200, {
         "Content-Type":        "audio/mpeg",
-        "Content-Disposition": `attachment; filename="${taskId}.mp3"`,
+        "Content-Disposition": `attachment; filename=\"${taskId}.mp3\"`,
       });
       return fs.createReadStream(filePath).pipe(res);
     }
@@ -591,3 +594,4 @@ if (KEEP_ALIVE_URL) {
   process.on("SIGINT",  () => process.exit(0));
   process.on("SIGTERM", () => process.exit(0));
 }
+

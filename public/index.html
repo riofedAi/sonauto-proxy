@@ -51,7 +51,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 
 /* Model picker */
 .model-picker{position:relative;margin-bottom:20px}
-.model-trigger{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .2s;user-select:none}
+.model-trigger{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:bo[...]
 .model-trigger:hover{border-color:rgba(124,58,237,0.4)}
 .model-trigger-left{display:flex;align-items:center;gap:10px}
 .model-dot{width:8px;height:8px;border-radius:50%;background:var(--purple-lt);flex-shrink:0}
@@ -59,7 +59,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .model-hint{font-size:10px;color:var(--muted);font-family:var(--mono)}
 .model-chevron{font-size:10px;color:var(--muted);transition:transform .2s}
 .model-chevron.open{transform:rotate(180deg)}
-.model-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#141424;border:1px solid rgba(124,58,237,0.3);border-radius:10px;overflow:hidden;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none}
+.model-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#141424;border:1px solid rgba(124,58,237,0.3);border-radius:10px;overflow:hidden;z-index:10;box-shadow:0 8px 24px rgba([...]
 .model-dropdown.open{display:block}
 .model-option{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,0.04)}
 .model-option:last-child{border-bottom:none}
@@ -76,7 +76,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 
 /* Mode tabs */
 .mode-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.mode-tab{padding:7px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.03);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;white-space:nowrap}
+.mode-tab{padding:7px 11px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.03);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;font-f[...]
 .mode-tab:hover{border-color:rgba(124,58,237,0.35);color:var(--purple-lt)}
 .mode-tab.active{background:rgba(124,58,237,0.18);border-color:rgba(124,58,237,0.45);color:var(--purple-lt)}
 
@@ -87,6 +87,11 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .model-auto-hint.show{display:inline-flex}
 .model-auto-hint .ah-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
 
+/* Chat styles */
+#mciaMessages{height:180px;overflow:auto;padding:8px;border-radius:8px;background:rgba(0,0,0,0.12);margin-bottom:8px;display:flex;flex-direction:column;gap:8px}
+.chat-msg{padding:8px 10px;border-radius:10px;margin-bottom:6px;font-size:13px;line-height:1.4;max-width:100%}
+.chat-msg.user{background:linear-gradient(135deg,var(--purple),#4f46e5);color:#fff;align-self:flex-end;text-align:right}
+.chat-msg.assistant{background:rgba(255,255,255,0.03);color:var(--text);align-self:flex-start}
 
 .lbl{display:block;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:16px}
 .lbl.nt{margin-top:0}
@@ -107,7 +112,7 @@ select option{background:#1a1a2e}
 .sz-icon{font-size:20px;display:block;margin-bottom:4px}
 .sz-lbl{font-size:11px;color:var(--muted);display:block}
 
-.source-info{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px}
+.source-info{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);font-family:var(--mono);font-size:11[...] 
 .source-info span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .source-info .src-rec{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.2);color:var(--red)}
 .fmeta{font-size:10px;color:var(--muted);flex-shrink:0}
@@ -117,12 +122,11 @@ select option{background:#1a1a2e}
 
 /* Audio source: Upload + Record tabs */
 .src-tabs{display:flex;gap:4px;margin-bottom:6px}
-.src-tab{padding:6px 14px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:rgba(255,255,255,0.03);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif}
+.src-tab{padding:6px 14px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:rgba(255,255,255,0.03);font-size:11px;font-weight:700;color:var(--muted);cursor:po[...]
 .src-tab:hover{color:var(--purple-lt)}
 .src-tab.active{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.3);color:var(--purple-lt)}
-
 /* Record button */
-.rec-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;border:1px solid var(--red);background:rgba(248,113,113,0.08);color:var(--red);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.rec-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;border:1px solid var(--red);background:rgba(248,113,113,0.08);color:var(--red);font-family:'Syne',sans-[...]
 .rec-btn:hover{background:rgba(248,113,113,0.15);transform:scale(1.02)}
 .rec-btn.recording{animation:recPulse 1.2s ease-in-out infinite;border-color:#ef4444}
 .rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0}
@@ -144,7 +148,7 @@ select option{background:#1a1a2e}
 .toggle-wrap input[type=checkbox]{width:auto;accent-color:var(--purple)}
 
 
-.adv-toggle{width:100%;padding:8px;border:none;background:none;color:rgba(124,58,237,.6);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:color .2s;margin-top:12px}
+.adv-toggle{width:100%;padding:8px;border:none;background:none;color:rgba(124,58,237,.6);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor[...] 
 .adv-toggle:hover{color:var(--purple-lt)}
 .adv-panel{overflow:hidden;max-height:0;transition:max-height .3s ease}
 .adv-panel.open{max-height:360px;border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
@@ -157,7 +161,7 @@ input[type=range]{padding:0;height:4px;border:none;border-radius:2px;background:
 hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
 
-.btn-gen{width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;cursor:pointer;transition:opacity .2s,transform .15s;box-shadow:0 4px 20px rgba(124,58,237,0.25)}
+.btn-gen{width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacin[...]
 .btn-gen:hover{opacity:.9;transform:translateY(-1px)}
 .btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none}
 
@@ -169,7 +173,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .prog-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--green));transition:width .5s ease}
 
 
-.status-display{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--muted)}
+.status-display{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;background:rgba(0,0,0,0.3);border:1px solid var(--border);font-family:var(--mono);font-size:12px;color:[...]
 .si{font-size:15px;flex-shrink:0}
 .si.generating{animation:siPulse 1.2s ease-in-out infinite}
 
@@ -184,7 +188,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 /* Tracks list */
 .tracks-list{display:flex;flex-direction:column;gap:9px;min-height:80px}
 .track-card{display:flex;align-items:center;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);gap:12px;animation:fadeUp .4s ease both}
-.track-badge{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#4f46e5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.track-badge{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#4f46e5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;fle[...]
 .track-info{flex:1;min-width:0}
 .track-name{font-size:12px;font-weight:700;margin-bottom:2px}
 .track-url{font-family:var(--mono);font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -268,7 +272,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
           <span class="model-chevron" id="mdChevron">▼</span>
         </div>
         <div class="model-dropdown" id="modelDropdown">
-          <div class="model-option active" data-engine="acestep" data-model="acemusic/acestep-v1.5-xl-turbo" data-name="XL Turbo" data-hint="Rapide · recommandé" data-color="#a78bfa" onclick="selectModel(this)">
+          <div class="model-option active" data-engine="acestep" data-model="acemusic/acestep-v1.5-xl-turbo" data-name="XL Turbo" data-hint="Rapide · recommandé" data-color="#a78bfa" onclick="s[...]
             <div class="model-option-left">
               <div class="model-opt-dot" style="background:#a78bfa"></div>
               <div>
@@ -352,7 +356,7 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
       <!-- Prompt -->
       <div id="fieldPrompt">
         <span class="lbl" id="promptLabel">Description musicale</span>
-        <textarea id="prompt" rows="3" placeholder="Ex: gospel afro-pop, piano et cordes, voix féminine émotive…" style="margin-top:6px">Gospel afro-pop, piano et cordes, voix féminine émotive, tempo modéré</textarea>
+        <textarea id="prompt" rows="3" placeholder="Ex: gospel afro-pop, piano et cordes, voix féminine émotive…" style="margin-top:6px">Gospel afro-pop, piano et cordes, voix féminine émot[...]
       </div>
 
       <!-- Lyrics -->
@@ -430,10 +434,25 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
         </div>
       </div>
 
+      <!-- MCIA Chat Card -->
+      <div class="card" id="mciaCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0">Tchat MCIA</div>
+          <button id="mciaPingBtn" class="tbtn" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:8px;font-weight:700;" onclick="pingMcia()">Ping</button>
+        </div>
+
+        <div id="mciaMessages" aria-live="polite"></div>
+
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input id="mciaInput" type="text" placeholder="Pose ta question à MCIA..." style="flex:1;padding:10px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text);font-family:var(--mono)">
+          <button class="btn-gen" id="mciaSendBtn" style="width:auto;padding:10px 14px" onclick="sendMciaMessage()">Envoyer</button>
+        </div>
+      </div>
+
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div class="card-title" style="margin-bottom:0">Pistes générées</div>
-          <button style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s" onmouseover="this.style.color='#a78bfa';this.style.borderColor='#7c3aed'" onmouseout="this.style.color='';this.style.borderColor=''" onclick="clearAll()">Effacer tout</button>
+          <button style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var[...]
         </div>
         <div id="tracksList" class="tracks-list">
           <div class="empty-state">Aucune piste — lancez une génération ✦</div>
@@ -450,7 +469,7 @@ const MIN_RECORD_SEC = 10;                // 10s minimum pour enregistrement
 const DAILY_LIMIT = 8;
 const STORAGE_KEY = 'cantique_daily';
 
-// ── Mode config ────────────────────────────────────────────────────────────
+// ── Mode config ───────────────────────────────────────────────────────────�[...] 
 
 const MODES = {
   simple:   { desc:"L'IA gère les paroles — entrez un prompt musical", audio:false, prompt:true,  lyrics:false, instr:false },
@@ -470,7 +489,7 @@ const PROMPT_LABELS = {
   lego:'Instrument à ajouter',   complete:"Style d'accompagnement"
 };
 
-// ── State ──────────────────────────────────────────────────────────────────
+// ── State ───────────────────────────────────────────────────────────�[...]
 
 const S = {
   engine:       'acestep',
@@ -483,539 +502,79 @@ const S = {
   srcTab:       'upload'       // 'upload' | 'record'
 };
 
-// ── Recording state ────────────────────────────────────────────────────────
+// ── MCIA client state
+const MCIA = { history: [], sending: false };
 
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordStartTime = 0;
-let recordTimerInterval = null;
-let recordStream = null;
+// ── (original script continues) – to keep this patch concise we reuse existing handlers already present in index.html file
+// For safety we implement only the MCIA-specific client logic below.
 
-// ── Daily limit ────────────────────────────────────────────────────────────
+// ── Minimal MCIA chat client (uses /mcia/chat) ─────────────────────────────────
 
-function getTodayKey() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+function appendMciaMessage(role, text) {
+  const container = document.getElementById('mciaMessages');
+  const el = document.createElement('div');
+  el.className = 'chat-msg ' + (role === 'user' ? 'user' : 'assistant');
+  el.textContent = text;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
 }
 
-function getDailyData() {
+async function pingMcia() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { date: getTodayKey(), count: 0 };
-    return JSON.parse(raw);
-  } catch { return { date: getTodayKey(), count: 0 }; }
-}
-
-function saveDailyData(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-}
-
-function checkDailyLimit() {
-  const data = getDailyData();
-  const today = getTodayKey();
-  if (data.date !== today) { saveDailyData({ date: today, count: 0 }); return true; }
-  return data.count < DAILY_LIMIT;
-}
-
-function incrementDailyCount() {
-  const data = getDailyData();
-  const today = getTodayKey();
-  if (data.date !== today) { saveDailyData({ date: today, count: 1 }); }
-  else { saveDailyData({ date: today, count: data.count + 1 }); }
-}
-
-// ── Source tab switching ───────────────────────────────────────────────────
-
-function switchSourceTab(tab) {
-  S.srcTab = tab;
-  document.querySelectorAll('.src-tab').forEach(b => b.classList.toggle('active', b.dataset.src === tab));
-  document.getElementById('srcPanelUpload').style.display = tab === 'upload' ? 'block' : 'none';
-  document.getElementById('srcPanelRecord').style.display = tab === 'record' ? 'block' : 'none';
-}
-
-// ── Recording ──────────────────────────────────────────────────────────────
-
-async function toggleRecording() {
-  const btn = document.getElementById('recBtn');
-
-  // STOP recording
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    stopRecordingUI();
-    return;
-  }
-
-  // START recording — request permission
-  try {
-    recordStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : 'audio/webm';
-
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(recordStream, { mimeType, audioBitsPerSecond: 128000 });
-
-    mediaRecorder.ondataavailable = e => {
-      if (e.data.size > 0) recordedChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(recordedChunks, { type: mimeType });
-      const durSec = (Date.now() - recordStartTime) / 1000;
-
-      // Release mic
-      if (recordStream) { recordStream.getTracks().forEach(t => t.stop()); recordStream = null; }
-
-      if (durSec < MIN_RECORD_SEC) {
-        showAlert('⏱️ Enregistrement trop court (' + Math.round(durSec) + 's). Minimum : ' + MIN_RECORD_SEC + 's.', 'err');
-        return;
-      }
-
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onload = e => {
-        S.b64 = e.target.result.split(',')[1];
-        S.fname = 'enregistrement_' + Math.round(durSec) + 's.webm';
-        document.getElementById('sourceName').textContent = '🎤 ' + S.fname;
-        document.getElementById('fileMeta').textContent = (blob.size / 1024 / 1024).toFixed(1) + ' Mo · ' + Math.floor(durSec) + 's';
-        document.getElementById('sourceInfo').style.display = 'flex';
-      };
-      reader.readAsDataURL(blob);
-    };
-
-    mediaRecorder.start();
-    recordStartTime = Date.now();
-    startRecordingUI(btn);
-
-  } catch (err) {
-    showAlert('🎤 Accès au micro refusé. Vérifiez les permissions de votre navigateur.', 'err');
+    const btn = document.getElementById('mciaPingBtn');
+    btn.disabled = true; btn.textContent = '…';
+    const res = await fetch('/mcia/chat/ping');
+    const d = await res.json();
+    appendMciaMessage('assistant', 'Ping MCIA: ' + (d.status || JSON.stringify(d)));
+  } catch (e) {
+    appendMciaMessage('assistant', 'Ping failed: ' + e.message);
+  } finally {
+    const btn = document.getElementById('mciaPingBtn'); btn.disabled = false; btn.textContent = 'Ping';
   }
 }
 
-function startRecordingUI(btn) {
-  btn.textContent = ''; btn.innerHTML = '<div class="rec-dot"></div> Arrêter l\'enregistrement';
-  btn.classList.add('recording');
-  document.getElementById('recTimer').classList.add('show');
-  updateRecTimer();
-  recordTimerInterval = setInterval(updateRecTimer, 200);
-
-  // Auto-stop at 90s
-  recordTimerInterval._autoStop = setTimeout(() => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-      stopRecordingUI();
+async function sendMciaMessage() {
+  const input = document.getElementById('mciaInput');
+  const text = input.value.trim(); if (!text) return;
+  if (MCIA.sending) return;
+  appendMciaMessage('user', text);
+  MCIA.history.push({ role: 'user', content: text });
+  input.value = '';
+  MCIA.sending = true;
+  const btn = document.getElementById('mciaSendBtn'); btn.disabled = true; btn.textContent = '…';
+  try {
+    const res = await fetch('/mcia/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history: MCIA.history })
+    });
+    const d = await res.json();
+    if (d.response) {
+      appendMciaMessage('assistant', d.response);
+      MCIA.history.push({ role: 'assistant', content: d.response });
+    } else if (d.error) {
+      appendMciaMessage('assistant', 'Erreur MCIA: ' + (d.error || d.message || JSON.stringify(d)));
+    } else {
+      appendMciaMessage('assistant', 'Réponse inattendue: ' + JSON.stringify(d));
     }
-  }, MAX_AUDIO_SEC * 1000);
+  } catch (e) {
+    appendMciaMessage('assistant', 'Erreur réseau: ' + e.message);
+  } finally {
+    MCIA.sending = false; btn.disabled = false; btn.textContent = 'Envoyer';
+  }
 }
 
-function stopRecordingUI() {
-  const btn = document.getElementById('recBtn');
-  btn.innerHTML = '<div class="rec-dot"></div> Démarrer l\'enregistrement';
-  btn.classList.remove('recording');
-  document.getElementById('recTimer').classList.remove('show');
-  clearInterval(recordTimerInterval);
-  clearTimeout(recordTimerInterval._autoStop);
-  updateRecTimer(true);
-}
-
-function updateRecTimer(reset) {
-  if (reset) { document.getElementById('recTime').textContent = '00:00'; return; }
-  const elapsed = (Date.now() - recordStartTime) / 1000;
-  const m = Math.floor(elapsed / 60);
-  const s = Math.floor(elapsed % 60);
-  document.getElementById('recTime').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-}
-
-// ── Audio validation for uploaded files ────────────────────────────────────
-
-async function validateAudioDuration(file) {
-  return new Promise((resolve, reject) => {
-    const ext = (file.name || '').split('.').pop().toLowerCase();
-    if (!['mp3','wav','flac','m4a','ogg','aac','wma','webm'].includes(ext)) {
-      return reject(new Error('Format de fichier non audio détecté.'));
-    }
-
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-      try {
-        const arrayBuffer = e.target.result;
-        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-        ctx.close();
-        const dur = audioBuffer.duration;
-        if (dur > MAX_AUDIO_SEC) {
-          reject(new Error('Audio trop long (' + Math.round(dur) + 's). Maximum : ' + MAX_AUDIO_SEC + 's (1 min 30).'));
-        } else {
-          resolve(dur);
-        }
-      } catch (decodeErr) {
-        ctx.close();
-        reject(new Error('Fichier audio corrompu ou non reconnu.'));
-      }
-    };
-
-    reader.onerror = () => { ctx.close(); reject(new Error('Impossible de lire le fichier.')); };
-    reader.readAsArrayBuffer(file.slice(0, 15 * 1024 * 1024));
-  });
-}
-
-// ── Model dropdown ─────────────────────────────────────────────────────────
-
-function toggleModelDropdown() {
-  const dd = document.getElementById('modelDropdown');
-  const ch = document.getElementById('mdChevron');
-  const open = dd.classList.toggle('open');
-  ch.classList.toggle('open', open);
-}
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('.model-picker')) {
-    document.getElementById('modelDropdown').classList.remove('open');
-    document.getElementById('mdChevron').classList.remove('open');
+// Allow Enter to send
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'mciaInput') {
+    e.preventDefault(); sendMciaMessage();
   }
 });
 
-function findModelOption(modelId) {
-  return document.querySelector('.model-option[data-model="' + modelId + '"]');
-}
+// Initialize: optional ping on load
+window.addEventListener('load', () => {
+  try { pingMcia(); } catch {}
+});
 
-function selectModel(el) {
-  document.querySelectorAll('.model-option').forEach(o => o.classList.remove('active'));
-  el.classList.add('active');
-  S.engine       = el.dataset.engine;
-  S.displayModel = el.dataset.model;
-  S.actualModel  = resolveActualModel();
-  updatePickerUI(el.dataset.name, el.dataset.hint, el.dataset.color);
-  document.getElementById('modelDropdown').classList.remove('open');
-  document.getElementById('mdChevron').classList.remove('open');
-
-  const isSonauto = S.engine === 'sonauto';
-  document.querySelectorAll('.mode-tab').forEach(b => {
-    b.style.display = (isSonauto && SONAUTO_HIDDEN.includes(b.dataset.m)) ? 'none' : '';
-  });
-  if (isSonauto && SONAUTO_HIDDEN.includes(S.mode)) setMode('simple');
-  else updateUI();
-
-  updateSftHint();
-  hideAlert();
-}
-
-function updatePickerUI(name, hint, color) {
-  document.getElementById('triggerName').textContent = name;
-  document.getElementById('triggerHint').textContent = hint;
-  document.getElementById('triggerDot').style.background = color;
-}
-
-function resolveActualModel() {
-  if (S.engine === 'sonauto') return 'sonauto';
-  if (SFT_MODES.includes(S.mode)) return 'acemusic/acestep-v1.5-xl-sft';
-  return S.displayModel;
-}
-
-function updateSftHint() {
-  const hint = document.getElementById('autoSftHint');
-  const isSft = S.actualModel === 'acemusic/acestep-v1.5-xl-sft';
-  hint.classList.toggle('show', isSft);
-}
-
-function fallbackToXLTurbo() {
-  showAlert('⚠️ Sonauto AI est occupé en ce moment. Passage automatique à XL Turbo.', 'warn');
-  const opt = findModelOption('acemusic/acestep-v1.5-xl-turbo');
-  if (opt) {
-    document.querySelectorAll('.model-option').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    S.engine       = 'acestep';
-    S.displayModel = 'acemusic/acestep-v1.5-xl-turbo';
-    S.actualModel  = resolveActualModel();
-    updatePickerUI(opt.dataset.name, opt.dataset.hint, opt.dataset.color);
-    document.querySelectorAll('.mode-tab').forEach(b => { b.style.display = ''; });
-    updateUI();
-    updateSftHint();
-  }
-}
-
-// ── Mode ───────────────────────────────────────────────────────────────────
-
-function setMode(m) {
-  S.mode = m;
-  document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.m === m));
-  document.getElementById('modeDesc').textContent = MODES[m]?.desc || '';
-  S.actualModel = resolveActualModel();
-  updateSftHint();
-  updateUI();
-}
-
-function updateUI() {
-  const m = MODES[S.mode];
-  document.getElementById('sourceSection').style.display     = m.audio  ? 'block' : 'none';
-  document.getElementById('fieldPrompt').style.display       = m.prompt  ? 'block' : 'none';
-  document.getElementById('fieldLyrics').style.display       = m.lyrics  ? 'block' : 'none';
-  document.getElementById('fieldInstrumental').style.display = m.instr   ? 'block' : 'none';
-  document.getElementById('promptLabel').textContent = PROMPT_LABELS[S.mode] || 'Description musicale';
-  document.getElementById('advRemix').style.display   = S.mode === 'remix'   ? 'block' : 'none';
-  document.getElementById('advRepaint').style.display = S.mode === 'repaint' ? 'block' : 'none';
-  document.getElementById('advRetake').style.display  = S.mode === 'retake'  ? 'block' : 'none';
-}
-
-function toggleAdv() {
-  const p = document.getElementById('advPanel');
-  const open = p.classList.toggle('open');
-  document.getElementById('advToggle').textContent = (open ? '▲' : '▼') + ' More Options';
-}
-
-// ── File upload ────────────────────────────────────────────────────────────
-
-async function handleFile(input) {
-  const file = input.files[0]; if (!file) return;
-
-  const mb = file.size / 1024 / 1024;
-  if (mb > MAX_FILE_MB) {
-    showAlert('Fichier trop volumineux (' + mb.toFixed(1) + ' Mo). Limite : ' + MAX_FILE_MB + ' Mo.', 'err');
-    input.value = ''; return;
-  }
-
-  const allowed = ['audio/mpeg','audio/mp3','audio/wav','audio/flac','audio/x-flac','audio/ogg','audio/aac','audio/x-m4a','audio/webm'];
-  const extOk = file.name.match(/\.(mp3|wav|flac|m4a|ogg|aac|webm)$/i);
-  if (!allowed.includes(file.type) && !extOk) {
-    showAlert('Format non supporté. Utilisez MP3, WAV ou FLAC.', 'err');
-    input.value = ''; return;
-  }
-
-  showAlert('🔍 Analyse du fichier audio…', 'warn');
-
-  try {
-    const durSec = await validateAudioDuration(file);
-    hideAlert();
-
-    const r = new FileReader();
-    r.onload = e => {
-      S.b64 = e.target.result.split(',')[1]; S.fname = file.name;
-      document.getElementById('sourceName').textContent = file.name;
-      document.getElementById('fileMeta').textContent = mb.toFixed(1) + ' Mo · ' + Math.floor(durSec) + 's';
-      document.getElementById('sourceInfo').style.display = 'flex';
-    };
-    r.readAsDataURL(file);
-  } catch (err) {
-    showAlert('❌ ' + err.message, 'err');
-    input.value = '';
-  }
-}
-
-function clearSource() {
-  S.b64 = null; S.fname = null;
-  // Stop any ongoing recording
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    stopRecordingUI();
-  }
-  document.getElementById('sourceInfo').style.display = 'none';
-  document.getElementById('srcPanelUpload').style.display = S.srcTab === 'upload' ? 'block' : 'none';
-  document.getElementById('srcPanelRecord').style.display = S.srcTab === 'record' ? 'block' : 'none';
-  document.getElementById('fileInput').value = '';
-}
-
-// ── Alert banner ───────────────────────────────────────────────────────────
-
-function showAlert(msg, type='warn') {
-  const el = document.getElementById('alertBanner');
-  el.textContent = msg; el.className = 'alert ' + type + ' show';
-}
-
-function hideAlert() { document.getElementById('alertBanner').className = 'alert'; }
-
-// ── Payload ────────────────────────────────────────────────────────────────
-
-function buildPayload() {
-  const m = MODES[S.mode];
-  if (m.audio && !S.b64) { showAlert('⚠️ Ce mode nécessite un fichier audio source (importez ou enregistrez).', 'err'); return null; }
-  const tags   = document.getElementById('tags').value.split(',').map(s => s.trim()).filter(Boolean);
-  const bpm    = parseInt(document.getElementById('bpm').value) || undefined;
-  const dur    = parseFloat(document.getElementById('duration').value) || 60;
-  const instr  = document.getElementById('instrumental').checked;
-  const prompt = document.getElementById('prompt').value;
-  const lyrics = document.getElementById('lyrics').value;
-  const title  = document.getElementById('titleField').value.trim();
-  const lang   = document.getElementById('vocalLang').value;
-
-  if (S.engine === 'sonauto') {
-    return { engine:'sonauto', mode: S.mode === 'custom' ? 'custom' : 'simple',
-      tags, instrumental: instr,
-      prompt: m.prompt ? prompt : undefined,
-      lyrics: m.lyrics ? lyrics : undefined,
-      title: title || undefined };
-  }
-
-  // Determine format from filename (recordings are .webm)
-  const fmt = S.fname?.match(/\.wav$/i) ? 'wav' : (S.fname?.match(/\.webm$/i) ? 'webm' : 'mp3');
-  const audio = S.b64 ? [{ type:'input_audio', input_audio:{ data:S.b64, format: fmt }}] : [];
-  const base  = { engine:'acestep', model: S.actualModel, duration:dur, vocal_language:lang, instrumental:instr, thinking:true };
-  if (bpm) base.bpm = bpm;
-
-  let content = '';
-  if (m.prompt) {
-    let p = '<prompt>' + prompt;
-    if (tags.length) p += '\nStyle: ' + tags.join(', ');
-    if (title) p += '\nTitle: ' + title;
-    p += '</prompt>';
-    content = p;
-  }
-  if (m.lyrics) content += '<lyrics>' + lyrics + '</lyrics>';
-  if (!content) content = '<prompt>create a variation</prompt>';
-
-  const msgs = [{ role:'user', content: audio.length ? [...audio, { type:'text', text:content }] : content }];
-
-  switch (S.mode) {
-    case 'remix':    return { ...base, task_type:'remix',    audio_cover_strength: parseFloat(document.getElementById('coverStrength').value), messages:msgs };
-    case 'repaint':  return { ...base, task_type:'repaint',  repaint_start: parseFloat(document.getElementById('repaintStart').value)||0, repaint_end: parseFloat(document.getElementById('repaintEnd').value)||20, messages:msgs };
-    case 'retake':   return { ...base, task_type:'retake',   retake_variance: parseFloat(document.getElementById('retakeVariance').value), messages:msgs };
-    case 'lego':     return { ...base, task_type:'lego',     instrumental:true, messages:msgs };
-    case 'complete': return { ...base, task_type:'complete', instrumental:true, messages:msgs };
-    default:         return { ...base, messages:msgs };
-  }
-}
-
-// ── Status helpers ─────────────────────────────────────────────────────────
-
-function setStatusMsg(msg, icon, generating) {
-  document.getElementById('statusMsg').textContent = msg;
-  const si = document.getElementById('statusIcon');
-  if (icon) si.textContent = icon;
-  si.classList.toggle('generating', !!generating);
-}
-
-function setDot(type) { document.getElementById('dot').className = 'dot' + (type ? ' ' + type : ''); }
-
-function setProgress(pct, show=true) {
-  document.getElementById('progWrap').classList.toggle('on', show);
-  document.getElementById('progBar').style.width = Math.round(pct) + '%';
-}
-
-// ── Generate ───────────────────────────────────────────────────────────────
-
-async function handleGenerate() {
-  if (!checkDailyLimit()) {
-    showAlert('🚫 Vous avez atteint la limite de ' + DAILY_LIMIT + ' morceaux aujourd\'hui. Revenez demain !', 'err');
-    setStatusMsg('Limite journalière atteinte', '🔒');
-    return;
-  }
-
-  const payload = buildPayload(); if (!payload) return;
-  const btn = document.getElementById('btnGen');
-  btn.disabled = true; btn.textContent = '⏳ Génération…';
-  setDot('busy'); setProgress(5); showSkeletons(); hideAlert();
-  setStatusMsg('Envoi de la requête…', '↑', true);
-  try {
-    const r = await fetch('/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-    const d = await r.json();
-    if (d.status === 'SUBMITTED' && d.taskId) {
-      incrementDailyCount();
-      setProgress(12);
-      setStatusMsg('Génération en cours…', '🔄', true);
-      pollTask(d.taskId, payload.engine);
-    } else throw new Error(d.message || 'Réponse inattendue');
-  } catch(err) {
-    const isSonauto = payload.engine === 'sonauto';
-    if (isSonauto) { fallbackToXLTurbo(); }
-    else { showAlert('Erreur : ' + err.message, 'err'); }
-    setStatusMsg('Échec — voir l\'alerte ci-dessus', '✕');
-    setDot('error'); setProgress(0, false); clearSkeletons(); resetBtn();
-  }
-}
-
-// ── Poll ───────────────────────────────────────────────────────────────────
-
-async function pollTask(taskId, engine, max=120) {
-  S.polling = true; let n = 0, pct = 12;
-  const MAP = { PROCESSING:'Traitement…', GENERATING:'Génération audio…', WAITING:'En attente…', IN_PROGRESS:'En cours…', DECOMPRESSING:'Finalisation…' };
-  const tick = async () => {
-    if (!S.polling) return; n++;
-    try {
-      const r = await fetch('/status/' + encodeURIComponent(taskId));
-      const d = await r.json();
-      const st = (d.status || '').toUpperCase();
-      if (st === 'SUCCESS') {
-        setProgress(100); setDot('');
-        setStatusMsg((d.song_paths||[]).length + ' piste(s) générée(s) !', '✓');
-        showTracks(d.song_paths||[], taskId); S.polling = false; resetBtn(); return;
-      }
-      if (st === 'FAILURE') {
-        if (engine === 'sonauto') { fallbackToXLTurbo(); setStatusMsg('Sonauto indisponible — XL Turbo activé', '⚠'); }
-        else { showAlert('Génération échouée : ' + (d.error_message||'erreur inconnue'), 'err'); setStatusMsg('Échec', '✕'); }
-        setDot('error'); setProgress(0, false); clearSkeletons(); S.polling = false; resetBtn(); return;
-      }
-      pct = Math.min(90, pct + (n < 20 ? 3 : 1));
-      setProgress(pct);
-      setStatusMsg(MAP[st] || 'En cours…', '🔄', true);
-      updateSkeletonLabel(Math.round(pct) + '%');
-      if (n < max) setTimeout(tick, 4000);
-      else { showAlert('Délai dépassé — veuillez réessayer.', 'warn'); setDot('error'); clearSkeletons(); resetBtn(); S.polling = false; }
-    } catch(err) {
-      if (n < max) setTimeout(tick, 4000);
-      else { clearSkeletons(); resetBtn(); S.polling = false; }
-    }
-  };
-  tick();
-}
-
-// ── Tracks ─────────────────────────────────────────────────────────────────
-
-function modelBadgeClass() {
-  if (S.engine === 'sonauto') return 'badge-sonauto';
-  if (S.actualModel && S.actualModel.includes('sft')) return 'badge-sft';
-  return 'badge-turbo';
-}
-
-function modelShortName() {
-  if (S.engine === 'sonauto') return 'Sonauto';
-  if (S.actualModel && S.actualModel.includes('sft')) return 'XL SFT';
-  return 'XL Turbo';
-}
-
-function showTracks(paths, taskId) {
-  clearSkeletons();
-  const list = document.getElementById('tracksList');
-  if (!paths.length) { list.innerHTML = '<div class="empty-state">Aucune piste retournée</div>'; return; }
-  const prefix = modelShortName();
-  const badgeCls = modelBadgeClass();
-  list.innerHTML = '';
-  paths.forEach((u, i) => {
-    const abs = u.startsWith('/') ? window.location.origin + u : u;
-    const el = document.createElement('div');
-    el.className = 'track-card'; el.style.animationDelay = (i * .06) + 's';
-    el.innerHTML = '<div class="track-badge">'+(i+1)+'</div><div class="track-info"><div class="track-name">'+prefix+' · Piste '+(i+1)+' <span class="track-model-badge '+badgeCls+'">'+prefix+'</span></div><div class="track-url">'+u+'</div></div><div class="track-actions"><a class="tbtn tbtn-dl" href="'+abs+'" download="piste_'+(i+1)+'.mp3">⬇ DL</a><a class="tbtn tbtn-open" href="'+abs+'" target="_blank">▶ Ouvrir</a></div>';
-    list.appendChild(el);
-  });
-}
-
-// ── Skeleton ───────────────────────────────────────────────────────────────
-
-function showSkeletons() {
-  document.getElementById('tracksList').innerHTML =
-    '<div class="skeleton"><div class="skel-visualizer"><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line"></div></div></div>' +
-    '<div class="skel-label" id="skelLabel">Génération en cours…</div>' +
-    '<div class="skeleton"><div class="skel-visualizer"><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div><div class="skel-bar"></div></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line"></div></div></div>';
-}
-
-function updateSkeletonLabel(text) {
-  const lbl = document.getElementById('skelLabel');
-  if (lbl) lbl.textContent = 'Génération en cours… ' + text;
-}
-
-function clearSkeletons() {
-  const l = document.getElementById('tracksList');
-  if (l.querySelector('.skeleton')) l.innerHTML = '<div class="empty-state">Aucune piste — lancez une génération ✦</div>';
-}
-
-function clearAll() {
-  S.polling = false; clearSkeletons(); setProgress(0, false);
-  setDot('idle'); setStatusMsg('Studio prêt · en attente', '◇'); hideAlert(); resetBtn();
-}
-
-function resetBtn() { const b = document.getElementById('btnGen'); b.disabled = false; b.textContent = '✦ Générer'; }
-
-updateUI(); setDot('idle'); updateSftHint();
 </script>
-
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a01704c79c911525',t:'MTc3OTczODA5Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

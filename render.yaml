@@ -16,29 +16,29 @@ services:
     envVars:
       # ── Sonauto ──────────────────────────────────────────────────────────
       - key: EXPO_PUBLIC_SONAUTO_API_KEY
-        sync: false          # set manually in Render dashboard
+        sync: false          # set manually
 
       # ── ACE-Step ─────────────────────────────────────────────────────────
       - key: ACESTEP_API_KEY
         sync: false
       - key: ACESTEP_BASE_URL
-        sync: false          # set manually: https://api.acemusic.ai
+        sync: false          # set manually
 
       # ── MCIA — PythonAnywhere ─────────────────────────────────────────────
       - key: PYTHONANYWHERE_BASE_URL
-        sync: false          # set manually: https://cantiques.pythonanywhere.com
+        sync: false          # set manually
 
       # ── MCIA — NVIDIA / Kimi (principal) ──────────────────────────────────
       - key: NVIDIA_API_KEY
         sync: false
       - key: NVIDIA_API_URL
-        sync: false          # set manually: https://integrate.api.nvidia.com/v1/chat/completions
+        sync: false          # set manually
 
       # ── MCIA — Gemini (fallback) ───────────────────────────────────────────
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_API_URL
-        sync: false          # set manually: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+        sync: false          # set manually
 
       # ── Storage ───────────────────────────────────────────────────────────
       - key: AUTO_DOWNLOAD
@@ -58,7 +58,7 @@ services:
 
       # ── Keep-alive ────────────────────────────────────────────────────────
       - key: KEEP_ALIVE_URL
-        sync: false          # set manually: https://xxx.onrender.com/health
+        sync: false          # set manually
       - key: KEEP_ALIVE_INTERVAL_MS
         value: "240000"
 

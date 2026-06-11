@@ -14,7 +14,7 @@ const { pipeline }  = require("stream");
 const { promisify } = require("util");
 const streamPipeline = promisify(pipeline);
 
-const { handleMciaRoutes } = require("./mcia_service");
+const { handleMciaRoutes, MCIA_ROUTE_PREFIXES } = require("./mcia_service");
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -381,8 +381,8 @@ const server = http.createServer(async (req, res) => {
     return res.end(fs.readFileSync(htmlPath, "utf-8"));
   }
 
-  // ── MCIA routes ──────────────────────────────────────────────────────────
-  if (pathname.startsWith("/mcia/")) {
+  // ── MCIA + Data routes ───────────────────────────────────────────────────
+  if (MCIA_ROUTE_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(prefix + "/") || pathname.startsWith(prefix + "?"))) {
     return handleMciaRoutes(req, res, pathname);
   }
 

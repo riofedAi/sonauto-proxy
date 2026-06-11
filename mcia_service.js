@@ -84,7 +84,22 @@ async function callGemini(messages) {
 // ─── CORE PROXY ──────────────────────────────
 
 async function forward(path, options = {}, timeout = TIMEOUT_CHAT) {
-  const res = await withTimeout(fetch(PYTHONANYWHERE_BASE + path, {
+  // 🔥 correction automatique des routes
+  let fixedPath = path;
+
+  if (path.startsWith("/mcia/hymns")) fixedPath = path.replace("/mcia/hymns", "/hymns");
+  else if (path.startsWith("/mcia/gloria")) fixedPath = path.replace("/mcia/gloria", "/gloria");
+  else if (path.startsWith("/mcia/jic")) fixedPath = path.replace("/mcia/jic", "/jic");
+  else if (path.startsWith("/mcia/programme")) fixedPath = path.replace("/mcia/programme", "/programmes");
+  else if (path.startsWith("/mcia/psaumes")) fixedPath = path.replace("/mcia/psaumes", "/psaumes");
+  else if (path.startsWith("/mcia/prieres")) fixedPath = path.replace("/mcia/prieres", "/prieres");
+  else if (path.startsWith("/mcia/ressources")) fixedPath = path.replace("/mcia/ressources", "/ressources");
+
+  const url = PYTHONANYWHERE_BASE + fixedPath;
+
+  console.log("[MCIA → PA]", url);
+
+  const res = await withTimeout(fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",

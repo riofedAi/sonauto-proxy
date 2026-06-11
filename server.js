@@ -14,7 +14,7 @@ const { pipeline }  = require("stream");
 const { promisify } = require("util");
 const streamPipeline = promisify(pipeline);
 
-const { handleMciaRoutes, MCIA_ROUTE_PREFIXES } = require("./mcia_service");
+const { handleMciaRoutes } = require("./mcia_service");
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -162,7 +162,7 @@ async function sonautoCall(endpoint, method = "GET", body = null) {
   return data;
 }
 
-// ─── ACE-Step ────────────────────────────────────────────────────────────────
+// ─── ACE-Step ───────────────────────────────────────────────────────────────-
 
 async function acestepCall(payload, timeoutMs = 9 * 60 * 1000) {
   const ctrl = new AbortController();
@@ -265,7 +265,7 @@ async function pollSonauto(taskId, mode) {
   }
 }
 
-// ─── Route handlers (music) ───────────────────────────────────────────────────
+// ─── Route handlers (music) ─────────────────────────────────────────────────--
 
 async function handleGenerate(req, res) {
   const ip = getClientIP(req);
@@ -381,8 +381,11 @@ const server = http.createServer(async (req, res) => {
     return res.end(fs.readFileSync(htmlPath, "utf-8"));
   }
 
-  // ── MCIA + Data routes ───────────────────────────────────────────────────
-  if (MCIA_ROUTE_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(prefix + "/") || pathname.startsWith(prefix + "?"))) {
+  // ── MCIA + Hymns + Programmes routes ─────────────────────────────────────
+  if (pathname.startsWith("/mcia/") ||
+      pathname.startsWith("/hymns") ||
+      pathname.startsWith("/programmes") ||
+      pathname.startsWith("/programme")) {
     return handleMciaRoutes(req, res, pathname);
   }
 

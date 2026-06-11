@@ -1,4 +1,4 @@
-# render.yaml — Music AI Proxy
+# render.yaml — Music AI Proxy + MCIA
 # Deploy: connect repo on render.com → "New Web Service" → select this file
 # Docs  : https://render.com/docs/render-yaml-spec
 
@@ -20,19 +20,33 @@ services:
 
       # ── ACE-Step ─────────────────────────────────────────────────────────
       - key: ACESTEP_API_KEY
-        sync: false          # set manually in Render dashboard
+        sync: false
       - key: ACESTEP_BASE_URL
-        value: https://api.acemusic.ai
+        sync: false          # set manually: https://api.acemusic.ai
+
+      # ── MCIA — PythonAnywhere ─────────────────────────────────────────────
+      - key: PYTHONANYWHERE_BASE_URL
+        sync: false          # set manually: https://cantiques.pythonanywhere.com
+
+      # ── MCIA — NVIDIA / Kimi (principal) ──────────────────────────────────
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_API_URL
+        sync: false          # set manually: https://integrate.api.nvidia.com/v1/chat/completions
+
+      # ── MCIA — Gemini (fallback) ───────────────────────────────────────────
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_URL
+        sync: false          # set manually: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
 
       # ── Storage ───────────────────────────────────────────────────────────
-      # Render disk is ephemeral — keep AUTO_DOWNLOAD=false
-      # Audio is kept in memory for IN_MEMORY_TTL_MS ms, then auto-purged
       - key: AUTO_DOWNLOAD
         value: "false"
       - key: IN_MEMORY_TTL_MS
-        value: "1800000"     # 30 minutes
+        value: "1800000"
 
-      # ── S3 (optional — uncomment to enable persistent storage) ────────────
+      # ── S3 (optional) ─────────────────────────────────────────────────────
       # - key: AWS_S3_BUCKET
       #   sync: false
       # - key: AWS_ACCESS_KEY_ID
@@ -42,19 +56,17 @@ services:
       # - key: AWS_REGION
       #   value: us-east-1
 
-      # ── Keep-alive (prevents Render free tier sleep) ──────────────────────
-      - key: ENABLE_KEEP_ALIVE
-        value: "true"
+      # ── Keep-alive ────────────────────────────────────────────────────────
       - key: KEEP_ALIVE_URL
-        value: ""            # set to your Render URL: https://xxx.onrender.com/health
+        sync: false          # set manually: https://xxx.onrender.com/health
       - key: KEEP_ALIVE_INTERVAL_MS
-        value: "240000"      # ping every 4 minutes
+        value: "240000"
 
-      # ── Optional: protect /generate endpoint ─────────────────────────────
+      # ── Optional auth ─────────────────────────────────────────────────────
       - key: CLIENT_API_KEY
-        value: ""            # leave empty to disable auth
+        sync: false
 
-      # ── Polling tuning ────────────────────────────────────────────────────
+      # ── Polling ───────────────────────────────────────────────────────────
       - key: MAX_POLL_ATTEMPTS
         value: "60"
       - key: POLL_BASE_DELAY_MS

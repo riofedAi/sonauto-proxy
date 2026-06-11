@@ -1,38 +1,18 @@
 /**
- * mcia_service.js — MCIA + Data proxy module for Render
- * Forwards all routes to PythonAnywhere + direct LLM fallback for /mcia/chat
+ * mcia_service.js — MCIA proxy module for Render
+ * Forwards /mcia/* requests to PythonAnywhere + direct LLM fallback
  *
- * Routes exposées :
- *
- * ── MCIA Chat ──────────────────────────────────────────────────────
+ * Routes exposed:
  *   POST /mcia/chat
  *   GET  /mcia/chat/ping
  *   GET  /mcia/models
- *
- * ── MCIA Contexte ──────────────────────────────────────────────────
  *   GET  /mcia/cultes
  *   GET  /mcia/cultes/:id
- *   GET  /mcia/cultes/:id/etapes
- *   GET  /mcia/cultes/search
- *   GET  /mcia/cultes-speciaux-v2
- *   GET  /mcia/guide/:culte_id
- *   GET  /mcia/psaumes
- *   GET  /mcia/psaumes/:pid
- *   GET  /mcia/prieres
- *   GET  /mcia/prieres/:pid
- *   GET  /mcia/cantiques-rituel
- *   GET  /mcia/protocole
- *   GET  /mcia/ressources
- *   GET  /mcia/knowledge-base
- *   GET  /mcia/knowledge/search
- *   GET  /mcia/stats
- *
- * ── Hymns ──────────────────────────────────────────────────────────
+ *   GET  /mcia/debug/kimi
+ *   GET  /mcia/debug/gemini
  *   GET  /hymns
  *   GET  /hymns/:id
  *   GET  /hymns/language/:lang
- *
- * ── Programmes ─────────────────────────────────────────────────────
  *   GET  /programmes
  *   GET  /programmes/:id
  *   GET  /programmes/search
@@ -41,36 +21,19 @@
  *   GET  /programme/month
  *   GET  /programme/next
  *   GET  /programme/next-sunday
- *
- * ── Glorias ────────────────────────────────────────────────────────
- *   GET  /glorias
- *   GET  /glorias/:numero
- *
- * ── JIC ────────────────────────────────────────────────────────────
- *   GET  /jic
- *   GET  /jic/:numero
- *
- * ── Updates ────────────────────────────────────────────────────────
- *   GET  /updates
- *   GET  /updates/latest
- *
- * ── Debug ──────────────────────────────────────────────────────────
- *   GET  /mcia/debug/kimi
- *   GET  /mcia/debug/gemini
  */
 
 const PYTHONANYWHERE_BASE = process.env.PYTHONANYWHERE_BASE_URL;
 const NVIDIA_API_URL      = process.env.NVIDIA_API_URL;
 const GEMINI_API_URL      = process.env.GEMINI_API_URL;
 
-if (!PYTHONANYWHERE_BASE) throw new Error("PYTHONANYWHERE_BASE_URL manquant");
+if (!PYTHONANYWHERE_BASE) throw new Error("PYTHONANYWHERE_BASE_URL manquant dans les variables d'environnement");
 if (!process.env.NVIDIA_API_KEY) console.warn("[MCIA] NVIDIA_API_KEY manquant — Kimi désactivé");
 if (!process.env.GEMINI_API_KEY) console.warn("[MCIA] GEMINI_API_KEY manquant — Gemini désactivé");
 
 const TIMEOUT_CHAT = 75000;
 const TIMEOUT_PING = 10000;
 const TIMEOUT_LLM  = 60000;
-const TIMEOUT_DATA = 15000;
 
 const cache     = new Map();
 const CACHE_TTL = 1000 * 60 * 2;
@@ -100,9 +63,16 @@ function withTimeout(promise, ms) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("timeout " + ms)), ms)
-    ),
+      setTimeout(() => reject(new Error("timeout after " + ms + "ms")), ms)
+    )
   ]);
+}
+
+function geminiHeaders(apiKey) {
+  return {
+    "Content-Type": "application/json",
+    "X-goog-api-key": apiKey,
+  };
 }
 
 // ─── LLM callers ──────────────────────────────────────────────────────────────
@@ -154,7 +124,7 @@ async function callGemini(messages) {
 
   const res = await withTimeout(fetch(GEMINI_API_URL, {
     method:  "POST",
-    headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
+    headers: geminiHeaders(apiKey),
     body: JSON.stringify({
       contents,
       generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 4096 },
@@ -169,13 +139,16 @@ async function callGemini(messages) {
   return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
 
-// ─── Forward générique vers PythonAnywhere ────────────────────────────────────
+// ─── Forward vers PythonAnywhere ──────────────────────────────────────────────
 
-async function forwardToPythonAnywhere(path, options = {}, timeoutMs = TIMEOUT_DATA) {
+async function forwardToPythonAnywhere(path, options = {}, timeoutMs = TIMEOUT_CHAT) {
   const url = PYTHONANYWHERE_BASE + path;
   const res = await withTimeout(fetch(url, {
     ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
   }), timeoutMs);
 
   if (!res.ok) {
@@ -185,7 +158,7 @@ async function forwardToPythonAnywhere(path, options = {}, timeoutMs = TIMEOUT_D
   return res.json();
 }
 
-// ─── Handlers MCIA Chat ───────────────────────────────────────────────────────
+// ─── Handlers ─────────────────────────────────────────────────────────────────
 
 async function handleChat(req, res) {
   const body = await readBody(req);
@@ -202,7 +175,7 @@ async function handleChat(req, res) {
 
     const history  = Array.isArray(body.history) ? body.history : [];
     const messages = [
-      { role: "system", content: "Tu es MCIA, Maître Chorale IA pour les Cantiques Célestes ECC." },
+      { role: "system", content: "Tu es MCIA, Maître Chorale IA pour les Cantiques Célestes." },
       ...history,
       { role: "user", content: body.message },
     ];
@@ -218,7 +191,7 @@ async function handleChat(req, res) {
         console.log("[MCIA] Gemini fallback OK");
         return send(res, { response: responseText, context_used: null, model_used: "gemini-fallback", error: null });
       } catch (geminiErr) {
-        console.error("[MCIA] Tous les providers échoués:", geminiErr.message);
+        console.error("[MCIA] Tous les providers ont échoué:", geminiErr.message);
         return send(res, {
           response:     "Service MCIA temporairement indisponible. Réessayez dans quelques instants. 🙏",
           context_used: null,
@@ -242,28 +215,24 @@ async function handlePing(res) {
   }
 }
 
-// ─── Handler générique (forward transparent) ──────────────────────────────────
-
-async function handleForward(req, res, pathname) {
-  // Préserver la query string
-  const qs  = req.url.includes("?") ? "?" + req.url.split("?").slice(1).join("?") : "";
-  const path = pathname + qs;
-
+async function handleModels(res) {
   try {
-    const opts = { method: req.method };
-    if (req.method === "POST" || req.method === "PUT") {
-      const body = await readBody(req);
-      opts.body  = JSON.stringify(body);
-    }
-    const data = await forwardToPythonAnywhere(path, opts, TIMEOUT_DATA);
+    const data = await forwardToPythonAnywhere("/mcia/models", { method: "GET" }, 10000);
     return send(res, data);
   } catch (e) {
-    console.warn("[PROXY]", path, "→", e.message);
-    return send(res, { error: e.message }, 502);
+    return send(res, { models: ["kimi", "gemini"], error: e.message });
   }
 }
 
-// ─── Debug ────────────────────────────────────────────────────────────────────
+async function handleCultes(res, culteId) {
+  try {
+    const path = culteId ? `/mcia/cultes/${encodeURIComponent(culteId)}` : "/mcia/cultes";
+    const data = await forwardToPythonAnywhere(path, { method: "GET" }, 10000);
+    return send(res, data);
+  } catch (e) {
+    return send(res, { error: e.message }, 502);
+  }
+}
 
 async function handleDebugKimi(res) {
   try {
@@ -283,30 +252,20 @@ async function handleDebugGemini(res) {
   }
 }
 
-// ─── Routes data (forward transparent vers PythonAnywhere) ────────────────────
+// ─── Forward transparent (hymns, programmes, etc.) ────────────────────────────
 
-const FORWARD_PREFIXES = [
-  "/hymns",
-  "/programmes",
-  "/programme",
-  "/glorias",
-  "/jic",
-  "/updates",
-  "/mcia/cultes",
-  "/mcia/cultes-speciaux-v2",
-  "/mcia/guide",
-  "/mcia/psaumes",
-  "/mcia/prieres",
-  "/mcia/cantiques-rituel",
-  "/mcia/protocole",
-  "/mcia/ressources",
-  "/mcia/knowledge-base",
-  "/mcia/knowledge",
-  "/mcia/stats",
-  "/mcia/models",
-];
+async function handleDataForward(req, res, pathname) {
+  try {
+    const qs   = req.url.includes("?") ? "?" + req.url.split("?").slice(1).join("?") : "";
+    const data = await forwardToPythonAnywhere(pathname + qs, { method: "GET" }, 15000);
+    return send(res, data);
+  } catch (e) {
+    console.warn("[PROXY]", pathname, "→", e.message);
+    return send(res, { error: e.message }, 502);
+  }
+}
 
-// ─── Router principal ─────────────────────────────────────────────────────────
+// ─── Router ───────────────────────────────────────────────────────────────────
 
 async function handleMciaRoutes(req, res, pathname) {
   try {
@@ -318,18 +277,29 @@ async function handleMciaRoutes(req, res, pathname) {
     if (pathname === "/mcia/chat/ping" && req.method === "GET")
       return await handlePing(res);
 
+    // Models
+    if (pathname === "/mcia/models" && req.method === "GET")
+      return await handleModels(res);
+
+    // Cultes
+    if (pathname === "/mcia/cultes" && req.method === "GET")
+      return await handleCultes(res, null);
+    if (pathname.startsWith("/mcia/cultes/") && req.method === "GET")
+      return await handleCultes(res, pathname.replace("/mcia/cultes/", ""));
+
     // Debug
     if (pathname === "/mcia/debug/kimi"   && req.method === "GET") return await handleDebugKimi(res);
     if (pathname === "/mcia/debug/gemini" && req.method === "GET") return await handleDebugGemini(res);
 
-    // Forward transparent pour toutes les autres routes connues
-    for (const prefix of FORWARD_PREFIXES) {
-      if (pathname === prefix || pathname.startsWith(prefix + "/") || pathname.startsWith(prefix + "?")) {
-        return await handleForward(req, res, pathname);
-      }
-    }
+    // Hymns — forward direct vers PythonAnywhere
+    if (pathname.startsWith("/hymns"))
+      return await handleDataForward(req, res, pathname);
 
-    return send(res, { error: "route inconnue" }, 404);
+    // Programmes — forward direct vers PythonAnywhere
+    if (pathname.startsWith("/programmes") || pathname.startsWith("/programme"))
+      return await handleDataForward(req, res, pathname);
+
+    return send(res, { error: "route MCIA inconnue" }, 404);
 
   } catch (err) {
     console.error("[MCIA] Erreur non gérée:", err);
@@ -337,15 +307,4 @@ async function handleMciaRoutes(req, res, pathname) {
   }
 }
 
-// ─── Préfixes à déclarer dans server.js ──────────────────────────────────────
-const MCIA_ROUTE_PREFIXES = [
-  "/mcia/",
-  "/hymns",
-  "/programmes",
-  "/programme",
-  "/glorias",
-  "/jic",
-  "/updates",
-];
-
-module.exports = { handleMciaRoutes, MCIA_ROUTE_PREFIXES };
+module.exports = { handleMciaRoutes };

@@ -199,11 +199,19 @@ const server = http.createServer(async (req, res) => {
     }
     return jsonRes(res, 404, { error: "Not found" });
   }
+  // ── UI ──────────────────────────────────────────────────────────────────
+  if ((pathname === "/" || pathname === "/ui") && req.method === "GET") {
+    const htmlPath = path.join(__dirname, "public", "index.html");
+    if (fs.existsSync(htmlPath)) {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(fs.readFileSync(htmlPath, "utf-8"));
+    }
+    return jsonRes(res, 404, { error: "UI not found" });
+  }
 
   // Health check
   if (pathname === "/health") return jsonRes(res, 200, { status: "ok", engine: "Undici-KeepAlive" });
 
   jsonRes(res, 404, { error: "Not Found" });
-});
 
 server.listen(PORT, () => console.log(`[Server] Port ${PORT} - Musique + MCIA Ready`));

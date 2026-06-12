@@ -213,5 +213,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/health") return jsonRes(res, 200, { status: "ok", engine: "Undici-KeepAlive" });
 
   jsonRes(res, 404, { error: "Not Found" });
+});
 
 server.listen(PORT, () => console.log(`[Server] Port ${PORT} - Musique + MCIA Ready`));
+    

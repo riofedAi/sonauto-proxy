@@ -1,22 +1,30 @@
 /**
- * server_fixed.js — Music AI Proxy + MCIA Proxy (FIX 2026-08-31)
- * Base : server.js déployé ("Undici-KeepAlive", 219 lignes) — RIEN d'autre n'est changé.
+ * server_fixed.js — Music AI Proxy + MCIA Proxy (FIX 2026-08-31 + COMPO PRO v2)
+ * Base : server.js déployé ("Undici-KeepAlive", 219 lignes) — contrats inchangés.
  *
- * ─── SEUL CHANGEMENT : runAcestepGeneration ──────────────────────────────────
- * BUG PROUVÉ EN LIVE (2026-08-31) :
- *   api.acemusic.ai renvoie parfois HTTP 504 + page HTML Cloudflare (~61s).
- *   L'ancien code faisait `await r.json()` → exception
- *   "Unexpected token < in JSON at position 0" → storeError → la tâche APK
- *   affiche FAILURE avec ce message. (C'était le bug "MCIA écran", pas l'APK.)
+ * ─── v1 (FIX 2026-08-31, DÉPLOYÉ) : runAcestepGeneration robuste ─────────────
+ *   api.acemusic.ai renvoie parfois 504 + HTML Cloudflare (~61s) → r.json() nu
+ *   plantait ("Unexpected token <"). FIX : lecture TEXTE + JSON.parse contrôlé
+ *   + retry automatique + message d'erreur explicite.
  *
- * FIX :
- *   1. Lecture en TEXTE puis JSON.parse contrôlé (jamais r.json() nu)
- *   2. Détection HTML/non-JSON → réessai automatique (MAX_UPSTREAM_ATTEMPTS, défaut 2)
- *   3. Message d'erreur final EXPLICITE (plus de "Unexpected token <" opaque)
- *   4. Aucune autre route/contrat modifié : /generate, /status, /download,
- *      song_paths relatif, rate limit, CORS, forwarding PythonAnywhere : IDENTIQUES.
+ * ─── v2 (COMPO PRO 2026-08-31) : qualité + durée professionnelles ────────────
+ *   1. thinking TOUJOURS ACTIVÉ côté ACE-Step (exigence produit : meilleure
+ *      qualité de composition). L'APK envoyait thinking=true/false selon le
+ *      retry mais le serveur l'écrasait avec false codé en dur → mode "réflexion"
+ *      du moteur jamais utilisé. Désormais : true par défaut, désactivable
+ *      via env ACESTEP_THINKING=false (aucun impact client).
+ *   2. DURÉE : l'APK envoie maintenant une durée CALCULÉE d'après la longueur
+ *      des paroles (3-5 min par défaut). Le proxy clamp la valeur reçue entre
+ *      30 et 480 s et utilise 240 s si absente (au lieu de 60 s).
+ *   3. MAX_UPSTREAM_ATTEMPTS : 2 → 3 (les morceaux de 3-5 min passent plus
+ *      de temps amont → plus de chances de croiser une 504 Cloudflare).
  *
- * Env optionnelle : MAX_UPSTREAM_ATTEMPTS (défaut 2), UPSTREAM_RETRY_DELAY_MS (défaut 3000)
+ *   /generate, /status, /download, song_paths relatif, rate limit, CORS,
+ *   forwarding PythonAnywhere : IDENTIQUES ("ne casse rien").
+ *
+ * Env : MAX_UPSTREAM_ATTEMPTS (déf 3), UPSTREAM_RETRY_DELAY_MS (déf 3000),
+ *       ACESTEP_THINKING (déf true), ACESTEP_DEFAULT_DURATION (déf 240),
+ *       ACESTEP_MAX_DURATION (déf 480)
  */
 
 require("dotenv").config();
@@ -52,8 +60,17 @@ const DAILY_LIMIT       = parseInt(process.env.DAILY_LIMIT) || 8;
 const MAX_BODY_SIZE     = (parseInt(process.env.MAX_BODY_SIZE_MB) || 25) * 1024 * 1024;
 const MAX_AUDIO_BASE64  = 15 * 1024 * 1024;
 // FIX : retry amont
-const MAX_UPSTREAM_ATTEMPTS = parseInt(process.env.MAX_UPSTREAM_ATTEMPTS) || 2;
+const MAX_UPSTREAM_ATTEMPTS = parseInt(process.env.MAX_UPSTREAM_ATTEMPTS) || 3;
 const UPSTREAM_RETRY_DELAY_MS = parseInt(process.env.UPSTREAM_RETRY_DELAY_MS) || 3000;
+// v2 COMPO PRO : thinking toujours actif + durée clampée (paroles longues = morceau long)
+const ACESTEP_THINKING = process.env.ACESTEP_THINKING !== "false"; // défaut TRUE
+const ACESTEP_DEFAULT_DURATION = parseInt(process.env.ACESTEP_DEFAULT_DURATION) || 240;
+const ACESTEP_MAX_DURATION = parseInt(process.env.ACESTEP_MAX_DURATION) || 480;
+function resolveAcestepDuration(raw) {
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n) || n <= 0) return ACESTEP_DEFAULT_DURATION;
+  return Math.min(ACESTEP_MAX_DURATION, Math.max(30, n));
+}
 
 // ─── IN-MEMORY STORE (ACE-Step audio) ────────────────────────────────────────
 const audioStore = new Map();
@@ -154,8 +171,10 @@ async function runAcestepGeneration(taskId, payload) {
         method: "POST", headers, body: JSON.stringify({
           model: payload.model || "acemusic/acestep-v1.5-xl-turbo",
           messages: payload.messages,
-          duration: payload.duration || 60,
-          thinking: false
+          duration: resolveAcestepDuration(payload.duration),
+          // ★ v2 COMPO PRO : thinking TOUJOURS activé côté moteur (exigence produit).
+          // L'ancien code forçait false ici, écrasant le choix de l'APK.
+          thinking: ACESTEP_THINKING
         })
       });
       // ★ FIX 1 : texte d'abord — un HTML amont ne fait plus planter en exception opaque
@@ -259,9 +278,16 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Health check
-  if (pathname === "/health") return jsonRes(res, 200, { status: "ok", engine: "Undici-KeepAlive-FIX", maxUpstreamAttempts: MAX_UPSTREAM_ATTEMPTS });
+  if (pathname === "/health") return jsonRes(res, 200, {
+    status: "ok",
+    engine: "Undici-KeepAlive-FIX2",
+    maxUpstreamAttempts: MAX_UPSTREAM_ATTEMPTS,
+    thinking: ACESTEP_THINKING,
+    defaultDurationSec: ACESTEP_DEFAULT_DURATION,
+    maxDurationSec: ACESTEP_MAX_DURATION,
+  });
 
   jsonRes(res, 404, { error: "Not Found" });
 });
 
-server.listen(PORT, () => console.log(`[Server] Port ${PORT} - Musique + MCIA Ready (FIX 2026-08-31: retry amont x${MAX_UPSTREAM_ATTEMPTS})`));
+server.listen(PORT, () => console.log(`[Server] Port ${PORT} - Musique + MCIA Ready (FIX2 COMPO PRO: thinking=${ACESTEP_THINKING}, dur ${ACESTEP_DEFAULT_DURATION}-${ACESTEP_MAX_DURATION}s, retry amont x${MAX_UPSTREAM_ATTEMPTS})`));

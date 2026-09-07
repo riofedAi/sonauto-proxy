@@ -2,7 +2,7 @@
  * server.js — Music AI Proxy v2.1 (2026-09-07)
  * ============================================
  * Moteur principal : TREBLO (https://api.treblo.com/v1)
- *   - POST /generations/{version}  → { task_id }
+ *   - POST /generations/{version}  → { task_id } 
  *   - GET  /generations/status/{task_id} → CHAÎNE JSON brute ("GENERATING",
  *     "SUCCESS", "FAILURE") — PAS un objet {status:...} (vérifié en prod)
  *   - GET  /generations/{task_id}  → objet complet { status, song_paths: [...] }

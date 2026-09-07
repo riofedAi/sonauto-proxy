@@ -1,5 +1,5 @@
 /**
- * server.js — Music AI Proxy v2 (2026-09-07)
+ * server.js — Music AI Proxy v2.1 (2026-09-07)
  * ============================================
  * Moteur principal : TREBLO (https://api.treblo.com/v1)
  *   - POST /generations/{version}  → { task_id }
@@ -705,7 +705,8 @@ const server = http.createServer(async (req, res) => {
     return jsonRes(res, 200, {
       status: "ok",
       service: "Music AI Proxy",
-      version: "2.0-treblo",
+      version: "2.1-treblo",
+      authRequired: !!CLIENT_API_KEY,
       keys: { total: loadKeys().length, active: activeKeys().length },
       tasks: { tracked: taskStore.size, audioCached: audioStore.size },
       engineb: ENABLE_ENGINEB && !!ENGINEB_BASE_URL,
